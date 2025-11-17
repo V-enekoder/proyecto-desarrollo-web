@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { PassportModule } from "@nestjs/passport";
-import { TypeOrmModule } from "@nestjs/typeorm";
+import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm";
 import { ms } from "ms";
 import { Session } from "../users/user.entity.js";
 import { UsersModule } from "../users/users.module.js";
@@ -9,7 +9,8 @@ import { AuthController } from "./auth.controller.js";
 import { AuthService } from "./auth.service.js";
 import { LocalStrategy } from "./local.strategy.js";
 import { SessionSerializer } from "./session.serializer.js";
-import { SessionStore, SessionStoreOptions } from "./session.store.js";
+import { SessionStore } from "./session.store.js";
+import { Repository } from "typeorm";
 
 @Module({
   imports: [
@@ -23,13 +24,14 @@ import { SessionStore, SessionStoreOptions } from "./session.store.js";
     AuthService,
     SessionSerializer,
     LocalStrategy,
-    SessionStore,
     {
-      provide: "SessionStoreOptions",
-      useFactory: (): SessionStoreOptions => ({
-        cleanupLimit: 100,
-        ttl: ms("7d") / 1000,
-      }),
+      provide: SessionStore,
+      inject: [getRepositoryToken(Session)],
+      useFactory: (repository: Repository<Session>) =>
+        new SessionStore(repository, {
+          cleanupLimit: 100,
+          ttl: ms("7d") / 1000,
+        }),
     },
   ],
 })

@@ -38,7 +38,6 @@ export class SessionStore extends Store {
   private onError: ((s: SessionStore, e: Error) => void) | undefined;
   private ttl: Ttl | undefined;
 
-  /** Initializes SessionStore with the given `options`. */
   constructor(
     @InjectRepository(Session)
     private readonly repository: Repository<Session>,
