@@ -10,6 +10,19 @@ export default defineConfig(
   globalIgnores(["**/dist", "**/node_modules", "**/build"]),
   js.configs.recommended,
   ...tseslint.configs.recommended,
+
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
+      "@typescript-eslint/consistent-type-imports": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+    },
+  },
+
   {
     files: ["./backend/**/*.ts"],
     languageOptions: {
@@ -24,10 +37,11 @@ export default defineConfig(
       //   tsconfigRootDir: path.join(import.meta.dirname, "backend"),
       // },
     },
-    // rules: {
-    //   "@typescript-eslint/no-floating-promises": "warn",
-    //   "@typescript-eslint/no-unsafe-argument": "warn",
-    // },
+    rules: {
+      "@typescript-eslint/consistent-type-imports": "off",
+      //   "@typescript-eslint/no-floating-promises": "warn",
+      //   "@typescript-eslint/no-unsafe-argument": "warn",
+    },
   },
   {
     files: ["./frontend/**/*.{ts,tsx}"],
@@ -40,13 +54,6 @@ export default defineConfig(
     languageOptions: {
       ecmaVersion: 2022,
       globals: globals.browser,
-    },
-  },
-  {
-    rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-empty-object-type": "off",
-      "@typescript-eslint/consistent-type-imports": "warn",
     },
   },
 );
