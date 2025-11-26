@@ -3,13 +3,16 @@ packages:
   - backend
   - packages/*
 
+overrides:
+  glob@^11.0.0: ^11.1.0
+
 catalog:
   typescript: ^5.9.3
   vite: npm:rolldown-vite@7.2.5
 
 ignoredBuiltDependencies:
-  - '@nestjs/core'
-  - '@scarf/scarf'
-  - '@swc/core'
+  - "@nestjs/core"
+  - "@scarf/scarf"
+  - "@swc/core"
   - bcrypt
   - unrs-resolver
