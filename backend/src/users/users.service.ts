@@ -127,9 +127,17 @@ export class UsersService {
   }
 
   async disposeRefreshToken(refreshToken: string) {
-    const token = await this.validateRefreshToken(refreshToken);
-    if (token) {
-      await this.refreshTokensRepository.delete(token.id);
+    try {
+      const token = await this.validateRefreshToken(refreshToken);
+      if (token) {
+        await this.refreshTokensRepository.delete(token.id);
+      }
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        // Token is already invalid, nothing to do
+      } else {
+        throw error;
+      }
     }
   }
 
