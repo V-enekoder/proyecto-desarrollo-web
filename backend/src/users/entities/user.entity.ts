@@ -1,4 +1,4 @@
-import * as bcrypt from "bcrypt";
+import * as argon2 from "argon2";
 import { Exclude } from "class-transformer";
 import { nanoid } from "nanoid";
 import {
@@ -42,12 +42,11 @@ export class User {
 
   @BeforeInsert()
   async hashPassword() {
-    const saltRounds = 10;
-    this.password = await bcrypt.hash(this.password, saltRounds);
+    this.password = await argon2.hash(this.password);
   }
 
-  validatePassword(password: string): Promise<boolean> {
-    return bcrypt.compare(password, this.password);
+  async validatePassword(password: string): Promise<boolean> {
+    return await argon2.verify(this.password, password);
   }
 
   toJwtPayload(): TokenPayload {

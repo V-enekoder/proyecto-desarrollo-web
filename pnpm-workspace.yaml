@@ -12,7 +12,6 @@ ignoredBuiltDependencies:
   - '@scarf/scarf'
   - '@swc/core'
   - '@vercel/speed-insights'
-  - bcrypt
   - esbuild
   - unrs-resolver
 
