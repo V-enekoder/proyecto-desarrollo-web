@@ -20,7 +20,9 @@ import { Auth } from "./decorators/auth.decorator.js";
 import { AuthResponseDto } from "./dtos/auth-response.dto.js";
 import { LoginDto } from "./dtos/login.dto.js";
 import { RegisterDto } from "./dtos/register.dto.js";
+import { UserDto } from "./dtos/user.dto.js";
 import { LocalGuard } from "./guards/local.guard.js";
+import { UserMapper } from "./mappers/user.mapper.js";
 
 @Controller("auth")
 export class AuthController {
@@ -76,9 +78,10 @@ export class AuthController {
 
   @Auth()
   @Get("me")
-  async getProfile(@Req() req: RequestType) {
+  @ApiOkResponse({ type: UserDto })
+  async getProfile(@Req() req: RequestType): Promise<UserDto> {
     const user = await this.userService.findOne(req.user!.id);
     if (!user) throw new NotFoundException("User not found");
-    return user;
+    return UserMapper.toDto(user);
   }
 }
