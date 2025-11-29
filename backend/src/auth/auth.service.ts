@@ -60,6 +60,11 @@ export class AuthService {
     return await this.login(user, res);
   }
 
+  async registerAdmin(signUpDto: SignUpDto, res: Response) {
+    await this.usersService.createAdmin(signUpDto);
+    return res;
+  }
+
   async refreshToken(req: Request, res: Response) {
     const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME] as
       | string

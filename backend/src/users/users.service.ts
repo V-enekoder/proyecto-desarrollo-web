@@ -69,6 +69,36 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  async createAdmin(data: SignUpDto): Promise<User> {
+    if (data.email) {
+      const existsEmail = await this.usersRepository.existsBy({
+        email: data.email,
+      });
+
+      if (existsEmail) {
+        throw new ConflictException("El email ya está en uso");
+      }
+    }
+
+    const existsUsername = await this.usersRepository.existsBy({
+      username: ILike(data.username),
+    });
+
+    if (existsUsername) {
+      throw new ConflictException("El nombre de usuario ya está en uso");
+    }
+
+    const user = this.usersRepository.create({
+      username: data.username,
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      role: RoleEnum.ADMIN,
+    });
+
+    return await this.usersRepository.save(user);
+  }
+
   async createRefreshToken(userId: string, oldRefreshTokenId: string | null) {
     const refreshToken = randomBytes(32).toString("hex");
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
