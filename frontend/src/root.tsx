@@ -1,3 +1,5 @@
+import "./styles/global.css";
+
 import {
   isRouteErrorResponse,
   Links,
@@ -6,9 +8,8 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
 import type { Route } from "./+types/root";
-import "./styles/global.css";
+import { VercelAnalytics } from "./components/analytics";
 import { Skeleton } from "./components/ui/skeleton";
 
 export const links: Route.LinksFunction = () => [
@@ -42,6 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
         <ScrollRestoration />
         <Scripts />
+        <VercelAnalytics />
       </body>
     </html>
   );

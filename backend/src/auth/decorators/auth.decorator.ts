@@ -1,9 +1,15 @@
 import { applyDecorators, UseGuards } from "@nestjs/common";
-import { LocalGuard } from "../guards/local.guard.js";
-import { RoleEnum } from "../../users/user.entity.js";
-import { RolesGuard } from "../guards/role.guard.js";
-import { Roles } from "./roles.decorator.js";
+import { ApiBearerAuth, ApiUnauthorizedResponse } from "@nestjs/swagger";
+import { PermissionEnum } from "../auth.permissions.js";
+import { AuthenticatedGuard } from "../guards/authenticated.guard.js";
+import { PermissionsGuard } from "../guards/permissions.guard.js";
+import { RequirePermissions } from "./permissions.decorator.js";
 
-export function Auth(roles: RoleEnum) {
-  return applyDecorators(UseGuards(LocalGuard, RolesGuard), Roles(roles));
+export function Auth(...permissions: PermissionEnum[]) {
+  return applyDecorators(
+    RequirePermissions(...permissions),
+    UseGuards(AuthenticatedGuard, PermissionsGuard),
+    ApiBearerAuth(),
+    ApiUnauthorizedResponse({ description: "Unauthorized" }),
+  );
 }

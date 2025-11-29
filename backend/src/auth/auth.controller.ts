@@ -9,19 +9,21 @@ import {
   NotFoundException,
   Post,
   Req,
-  Request,
   Res,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiBody } from "@nestjs/swagger";
+import { ApiBody, ApiOkResponse } from "@nestjs/swagger";
 import type { Request as RequestType, Response as ResponseType } from "express";
-import { RoleEnum, User } from "../users/user.entity.js";
-import { UsersService } from "../users/users.service.js";
-import { SignInDto, SignUpDto } from "./auth.dto.js";
+import { User } from "../users/entities/user.entity.js";
+import { UsersService } from "../users/services/users.service.js";
 import { AuthService } from "./auth.service.js";
-import { AuthenticatedGuard } from "./guards/authenticated.guard.js";
-import { LocalGuard } from "./guards/local.guard.js";
 import { Auth } from "./decorators/auth.decorator.js";
+import { AuthResponseDto } from "./dtos/auth-response.dto.js";
+import { LoginDto } from "./dtos/login.dto.js";
+import { RegisterDto } from "./dtos/register.dto.js";
+import { UserDto } from "./dtos/user.dto.js";
+import { LocalGuard } from "./guards/local.guard.js";
+import { UserMapper } from "./mappers/user.mapper.js";
 
 @Controller("auth")
 export class AuthController {
@@ -35,7 +37,8 @@ export class AuthController {
   @UseGuards(LocalGuard)
   @HttpCode(HttpStatus.OK)
   @Post("login")
-  @ApiBody({ type: SignInDto })
+  @ApiBody({ type: LoginDto })
+  @ApiOkResponse({ type: AuthResponseDto })
   async login(
     @Req() req: RequestType,
     @Res({ passthrough: true }) res: ResponseType,
@@ -48,8 +51,9 @@ export class AuthController {
 
   @HttpCode(HttpStatus.CREATED)
   @Post("register")
+  @ApiOkResponse({ type: AuthResponseDto })
   async register(
-    @Body() signUpDto: SignUpDto,
+    @Body() signUpDto: RegisterDto,
     @Res({ passthrough: true }) res: ResponseType,
   ) {
     return await this.authService.register(signUpDto, res);
@@ -65,6 +69,7 @@ export class AuthController {
   }
 
   @Post("refresh")
+  @ApiOkResponse({ type: AuthResponseDto })
   async refresh(
     @Req() req: RequestType,
     @Res({ passthrough: true }) res: ResponseType,
@@ -81,11 +86,12 @@ export class AuthController {
     return await this.authService.logout(req, res);
   }
 
-  @UseGuards(AuthenticatedGuard)
+  @Auth()
   @Get("me")
-  async getProfile(@Request() req: RequestType) {
+  @ApiOkResponse({ type: UserDto })
+  async getProfile(@Req() req: RequestType): Promise<UserDto> {
     const user = await this.userService.findOne(req.user!.id);
     if (!user) throw new NotFoundException("User not found");
-    return user;
+    return UserMapper.toDto(user);
   }
 }

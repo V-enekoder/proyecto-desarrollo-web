@@ -1,4 +1,4 @@
-import * as bcrypt from "bcrypt";
+import * as argon2 from "argon2";
 import { Exclude } from "class-transformer";
 import { nanoid } from "nanoid";
 import {
@@ -7,19 +7,11 @@ import {
   Entity,
   ManyToOne,
   PrimaryColumn,
+  Relation,
 } from "typeorm";
+import { RoleEnum } from "../../auth/auth.permissions.js";
+import type { TokenPayload } from "../../auth/token-payload.interface.js";
 import { RefreshToken } from "./refresh-token.entity.js";
-
-export enum RoleEnum {
-  USER = "user",
-  ADMIN = "admin",
-}
-
-export interface TokenPayload {
-  sub: string;
-  username: string;
-  role: RoleEnum;
-}
 
 @Entity()
 export class User {
@@ -46,16 +38,15 @@ export class User {
   role: RoleEnum;
 
   @ManyToOne(() => RefreshToken, (token) => token.user)
-  refreshTokens: RefreshToken[];
+  refreshTokens: Relation<RefreshToken>[];
 
   @BeforeInsert()
   async hashPassword() {
-    const saltRounds = 10;
-    this.password = await bcrypt.hash(this.password, saltRounds);
+    this.password = await argon2.hash(this.password);
   }
 
-  validatePassword(password: string): Promise<boolean> {
-    return bcrypt.compare(password, this.password);
+  async validatePassword(password: string): Promise<boolean> {
+    return await argon2.verify(this.password, password);
   }
 
   toJwtPayload(): TokenPayload {
