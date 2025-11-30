@@ -34,6 +34,7 @@ interface AuthState {
   getAccessToken(): Promise<string | null>;
   login(values: LoginDto): Promise<AuthDto>;
   register(values: RegisterDto): Promise<void>;
+  registerAdministrator(values: RegisterDto): Promise<void>;
   logout(): Promise<void>;
 }
 
@@ -80,7 +81,14 @@ const authStore = createStore<AuthState>()(
             .json<AuthDto>();
           setSession(data);
         },
-
+        async registerAdministrator(values: RegisterDto): Promise<void> {
+          await apiClient
+            .post("/api/auth/register/admin", {
+              json: values,
+              retry: 0,
+            })
+            .json<AuthDto>();
+        },
         async logout() {
           setSession(null);
           await apiClient.post("api/auth/logout", { retry: 0 }).catch(() => {});
@@ -156,4 +164,10 @@ export async function refreshSession(): Promise<AuthDto | null> {
   return refreshPromise;
 }
 
-export const { getAccessToken, login, logout, register } = authStore.getState();
+export const {
+  getAccessToken,
+  login,
+  logout,
+  register,
+  registerAdministrator,
+} = authStore.getState();
