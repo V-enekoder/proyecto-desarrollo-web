@@ -88,8 +88,8 @@ Puedes ejecutar el frontend y el backend simultáneamente desde la raíz del pro
     ```
 
 2.  **Abrir la aplicación:**
-    *   El frontend estará disponible en `http://localhost:5173` (o el puerto que hayas configurado).
-    *   El servidor backend se ejecutará en `http://localhost:3000` (o el puerto configurado).
+    *   El frontend estará disponible en `http://localhost:5173`.
+    *   El servidor backend se ejecutará en `http://localhost:3000`.
 
 ## 📜 Scripts Disponibles
 
@@ -99,7 +99,3 @@ Estos son algunos de los scripts principales que puedes ejecutar desde la raíz 
 *   `pnpm build`: Compila las aplicaciones de frontend y backend para producción.
 *   `pnpm lint`: Ejecuta ESLint para analizar el código en busca de errores.
 *   `pnpm format`: Formatea todo el código del proyecto utilizando Prettier.
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia (Especificar tipo de licencia, ej: MIT).
