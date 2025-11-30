@@ -139,12 +139,9 @@ export async function refreshSession(): Promise<AuthDto | null> {
   let refreshPromise = authStore.getState().refreshPromise;
   if (refreshPromise) return refreshPromise;
 
-  refreshPromise = fetch("api/auth/refresh", {
+  refreshPromise = fetch("/api/auth/refresh", {
     method: "POST",
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
   })
     .then(async (response) => {
       if (response.ok) {
