@@ -28,7 +28,10 @@ export class UsersService {
     return this.usersRepository.findOneBy({ username: ILike(username) });
   }
 
-  async create(data: RegisterDto): Promise<User> {
+  async create(
+    data: RegisterDto,
+    role: RoleEnum = RoleEnum.USER,
+  ): Promise<User> {
     if (data.email) {
       const existsEmail = await this.usersRepository.existsBy({
         email: data.email,
@@ -52,39 +55,9 @@ export class UsersService {
       email: data.email,
       password: data.password,
       name: data.name,
-      role: RoleEnum.USER,
+      role,
     });
 
-    return this.usersRepository.save(user);
-  }
-
-  async createAdmin(data: RegisterDto): Promise<User> {
-    if (data.email) {
-      const existsEmail = await this.usersRepository.existsBy({
-        email: data.email,
-      });
-
-      if (existsEmail) {
-        throw new ConflictException("El email ya está en uso");
-      }
-    }
-
-    const existsUsername = await this.usersRepository.existsBy({
-      username: ILike(data.username),
-    });
-
-    if (existsUsername) {
-      throw new ConflictException("El nombre de usuario ya está en uso");
-    }
-
-    const user = this.usersRepository.create({
-      username: data.username,
-      email: data.email,
-      password: data.password,
-      name: data.name,
-      role: RoleEnum.ADMIN,
-    });
-
-    return this.usersRepository.save(user);
+    return await this.usersRepository.save(user);
   }
 }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Body,
   Controller,
@@ -16,6 +15,7 @@ import { ApiBody, ApiOkResponse } from "@nestjs/swagger";
 import type { Request as RequestType, Response as ResponseType } from "express";
 import { User } from "../users/entities/user.entity.js";
 import { UsersService } from "../users/services/users.service.js";
+import { PermissionEnum } from "./auth.permissions.js";
 import { AuthService } from "./auth.service.js";
 import { Auth } from "./decorators/auth.decorator.js";
 import { AuthResponseDto } from "./dtos/auth-response.dto.js";
@@ -59,12 +59,10 @@ export class AuthController {
     return await this.authService.register(signUpDto, res);
   }
 
+  @Auth(PermissionEnum.CREATE_ADMIN)
   @HttpCode(HttpStatus.CREATED)
   @Post("register/admin")
-  async registerAdmin(
-    @Body() signUpDto: RegisterDto,
-    @Res({ passthrough: true }) res: ResponseType,
-  ) {
+  async registerAdmin(@Body() signUpDto: RegisterDto) {
     return await this.authService.registerAdmin(signUpDto);
   }
 

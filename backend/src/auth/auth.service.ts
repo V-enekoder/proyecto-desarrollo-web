@@ -13,6 +13,7 @@ import { AuthResponseDto } from "./dtos/auth-response.dto.js";
 import { RegisterDto } from "./dtos/register.dto.js";
 import { UserMapper } from "./mappers/user.mapper.js";
 import { RefreshTokenService } from "../users/services/refresh-token.service.js";
+import { RoleEnum } from "./auth.permissions.js";
 
 @Injectable()
 export class AuthService {
@@ -65,7 +66,7 @@ export class AuthService {
   }
 
   async registerAdmin(signUpDto: RegisterDto) {
-    await this.usersService.createAdmin(signUpDto);
+    await this.usersService.create(signUpDto, RoleEnum.ADMIN);
     return { message: "Admin registered successfully" };
   }
 
