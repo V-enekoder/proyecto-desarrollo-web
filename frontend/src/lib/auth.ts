@@ -64,7 +64,7 @@ const authStore = createStore<AuthState>()(
 
         async login(values: LoginDto): Promise<AuthDto> {
           const data = await apiClient
-            .post("api/auth/login", { json: values, retry: 0 })
+            .post("auth/login", { json: values, retry: 0 })
             .json<AuthDto>();
 
           setSession(data);
@@ -74,7 +74,7 @@ const authStore = createStore<AuthState>()(
 
         async register(values: RegisterDto): Promise<void> {
           const data = await apiClient
-            .post("api/auth/register", {
+            .post("auth/register", {
               json: values,
               retry: 0,
             })
@@ -83,7 +83,7 @@ const authStore = createStore<AuthState>()(
         },
         async registerAdministrator(values: RegisterDto): Promise<void> {
           await apiClient
-            .post("/api/auth/register/admin", {
+            .post("auth/register/admin", {
               json: values,
               retry: 0,
             })
@@ -91,7 +91,7 @@ const authStore = createStore<AuthState>()(
         },
         async logout() {
           setSession(null);
-          await apiClient.post("api/auth/logout", { retry: 0 }).catch(() => {});
+          await apiClient.post("auth/logout", { retry: 0 }).catch(() => {});
         },
       };
     },
