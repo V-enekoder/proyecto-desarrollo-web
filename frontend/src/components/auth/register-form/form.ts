@@ -35,9 +35,9 @@ export async function submitRegisterForm(
     return submission.reply();
   }
 
-  const promise = options.admin
-    ? registerAdministrator(submission.value)
-    : register(submission.value);
+  const { confirmPassword: _, ...data } = submission.value;
+
+  const promise = options.admin ? registerAdministrator(data) : register(data);
 
   return await promise.then(
     () => {
