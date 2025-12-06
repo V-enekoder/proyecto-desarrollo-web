@@ -97,6 +97,7 @@ const authStore = createStore<AuthState>()(
     },
     {
       name: AUTH_STORAGE_KEY,
+      // Persist only user metadata; accessToken stays in memory to avoid XSS/localStorage risks.
       partialize: (state) => ({ user: state.user }),
     },
   ),
