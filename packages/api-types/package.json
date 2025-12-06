@@ -1,0 +1,12 @@
+{
+  "name": "@uneg-lab/api-types",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "exports": {
+    "./*": "./lib/*"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  }
+}
