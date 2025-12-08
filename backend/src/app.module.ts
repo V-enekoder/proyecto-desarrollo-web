@@ -6,10 +6,10 @@ import { AppService } from "./app.service.js";
 import { AuthModule } from "./auth/auth.module.js";
 import { databaseConfig } from "./config/database.js";
 import { DatabaseModule } from "./database/database.module.js";
+import { HealthModule } from "./health/health.module.js";
 import { HttpExceptionFilter } from "./http-exception.filter.js";
 import { ReservationsModule } from "./reservations/reservations.module.js";
 import { UsersModule } from "./users/users.module.js";
-import { AppController } from "./app.controller.js";
 
 @Module({
   imports: [
@@ -18,6 +18,7 @@ import { AppController } from "./app.controller.js";
     AuthModule,
     UsersModule,
     ReservationsModule,
+    HealthModule,
   ],
   providers: [
     AppService,
@@ -34,6 +35,6 @@ import { AppController } from "./app.controller.js";
       useClass: HttpExceptionFilter,
     },
   ],
-  controllers: [AppController],
+  controllers: [],
 })
 export class AppModule {}

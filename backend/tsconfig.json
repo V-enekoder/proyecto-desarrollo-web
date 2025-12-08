@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "tsBuildInfoFile": "../node_modules/.tmp/tsconfig.backend.tsbuildinfo",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "resolvePackageJsonExports": true,
     "esModuleInterop": true,
     "isolatedModules": true,
