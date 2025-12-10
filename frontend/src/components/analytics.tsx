@@ -9,6 +9,7 @@ export function VercelAnalytics() {
   const path = location.pathname;
   const route = computeRoute(path, params);
 
+  
   return (
     <>
       <Analytics basePath={basePath} path={path} route={route} />
