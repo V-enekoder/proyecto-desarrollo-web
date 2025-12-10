@@ -1,6 +1,3 @@
-import type { FormMetadata } from "@conform-to/react";
-import { parseWithZod } from "@conform-to/zod/v4";
-import { redirect } from "react-router";
 import z from "zod";
 
 function requiredString(message = "Este campo es obligatorio") {
@@ -17,10 +14,6 @@ export const reservationFormSchema = z.object({
   description: z.string().optional(),
 });
 
-export type ReservationFormMetadata = FormMetadata<
-  z.infer<typeof reservationFormSchema>
->;
-
 export const AvailableHours = [
   "06:00",
   "07:00",
@@ -35,26 +28,16 @@ export const AvailableHours = [
   "16:00",
 ];
 
-export async function reservationFormAction(formData: FormData) {
-  const submission = parseWithZod(formData, { schema: reservationFormSchema });
-  console.log("Submission:", submission);
-
-  if (submission.status !== "success") {
-    return submission.reply();
-  }
-
-  const value = submission.value;
-
+export async function reservationFormAction(
+  value: z.infer<typeof reservationFormSchema>,
+) {
   if (!AvailableHours.includes(value.time)) {
-    return submission.reply({
-      fieldErrors: {
-        time: ["La hora seleccionada no está disponible"],
-      },
-    });
+    return {
+      error: "La hora seleccionada no está disponible",
+    };
   }
 
   // TODO: Replace with actual API call
   console.log("Reservación creada:", value);
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  throw redirect("/reservas");
 }

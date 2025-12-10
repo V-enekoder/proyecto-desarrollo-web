@@ -17,11 +17,13 @@ export default [
   ]),
 
   layout("./routes/private/layout.tsx", [
-    index("./routes/private/index.tsx"),
-    route("reservas", "./routes/private/reservas/index.tsx"),
-    route("reservas/:id", "./routes/private/reservas/[id].tsx"),
-    route("reservas/nueva", "./routes/private/reservas/nueva.tsx"),
-    route("dashboard", "./routes/private/dashboard.tsx"),
-    route("config", "./routes/private/config.tsx"),
+    layout("./routes/private/error.tsx", [
+      index("./routes/private/index.tsx"),
+      route("reservas", "./routes/private/reservas/index.tsx"),
+      route("reservas/:id", "./routes/private/reservas/[id].tsx"),
+      route("reservas/nueva", "./routes/private/reservas/nueva.tsx"),
+      route("dashboard", "./routes/private/dashboard.tsx"),
+      route("config", "./routes/private/config.tsx"),
+    ]),
   ]),
 ] satisfies RouteConfig;

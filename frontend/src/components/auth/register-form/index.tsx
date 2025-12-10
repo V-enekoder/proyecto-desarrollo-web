@@ -8,109 +8,127 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import {
-  getFormProps,
-  getInputProps,
-  type SubmissionResult,
-} from "@conform-to/react";
-import { Form, Link } from "react-router";
-import { useRegisterForm } from "./form";
+import { extractErrorMessages } from "@/lib/api";
+import * as auth from "@/lib/auth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useId } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router";
+import { registerSchema } from "./schema";
 
 interface RegisterFormProps {
-  lastResult: SubmissionResult<string[]> | undefined;
   title: React.ReactNode;
   subtitle: React.ReactNode;
   asideTitle: React.ReactNode;
   asideSubtitle: React.ReactNode;
   loginButton?: boolean;
+  admin: boolean;
 }
 
 export default function RegisterForm({
-  lastResult,
   title,
   subtitle,
   asideTitle,
   asideSubtitle,
   loginButton,
+  admin,
 }: RegisterFormProps) {
-  const { form, fields, isSubmitting } = useRegisterForm({ lastResult });
+  const navigate = useNavigate();
+  const formId = useId();
+  const form = useForm({
+    resolver: zodResolver(registerSchema),
+  });
+  const { handleSubmit, setError, register, formState } = form;
+  const { isSubmitting, errors } = formState;
 
   return (
     <AuthTemplate
       title={title}
       subtitle={subtitle}
       content={
-        <Form {...getFormProps(form)} method="post" className="md:min-w-lg">
+        <form
+          noValidate
+          onSubmit={handleSubmit(async (values) => {
+            const { confirmPassword: _, ...data } = values;
+
+            try {
+              await (admin
+                ? auth.registerAdministrator(data)
+                : auth.register(data));
+              navigate("/");
+            } catch (error) {
+              const errors = await extractErrorMessages(error);
+              setError("root", { type: "server", message: errors[0] });
+            }
+          })}
+          className="md:min-w-lg"
+        >
           <FieldGroup className="md:gap-3">
             <Field>
-              <FieldLabel htmlFor={fields.username.id}>
+              <FieldLabel htmlFor={`${formId}-username`}>
                 Nombre de Usuario
               </FieldLabel>
               <Input
                 placeholder="Ingresa tu nombre de usuario"
                 autoComplete="username"
-                {...getInputProps(fields.username, { type: "text" })}
+                type="text"
+                id={`${formId}-username`}
+                {...register("username")}
               />
-              <FieldError id={fields.username.errorId}>
-                {fields.username.errors}
-              </FieldError>
+              <FieldError>{errors.username?.message}</FieldError>
             </Field>
             <div className="flex flex-col gap-4 *:flex-1 md:flex-row">
               <Field>
-                <FieldLabel htmlFor={fields.name.id}>Nombre</FieldLabel>
+                <FieldLabel htmlFor={`${formId}-name`}>Nombre</FieldLabel>
                 <Input
                   placeholder="Ingresa tu nombre"
                   autoComplete="name"
-                  {...getInputProps(fields.name, { type: "text" })}
+                  type="text"
+                  id={`${formId}-name`}
+                  {...register("name")}
                 />
-                <FieldError id={fields.name.errorId}>
-                  {fields.name.errors}
-                </FieldError>
+                <FieldError>{errors.name?.message}</FieldError>
               </Field>
 
               <Field>
-                <FieldLabel htmlFor={fields.email.id}>Email</FieldLabel>
+                <FieldLabel htmlFor={`${formId}-email`}>Email</FieldLabel>
                 <Input
                   placeholder="correo@ejemplo.com"
                   autoComplete="email"
-                  {...getInputProps(fields.email, { type: "email" })}
+                  type="email"
+                  id={`${formId}-email`}
+                  {...register("email")}
                 />
-                <FieldError id={fields.email.errorId}>
-                  {fields.email.errors}
-                </FieldError>
+                <FieldError>{errors.email?.message}</FieldError>
               </Field>
             </div>
 
             <Field>
-              <FieldLabel htmlFor={fields.password.id}>Contraseña</FieldLabel>
+              <FieldLabel htmlFor={`${formId}-password`}>Contraseña</FieldLabel>
               <PasswordInput
                 placeholder="Ingresa tu contraseña"
                 autoComplete="new-password"
-                {...getInputProps(fields.password, { type: "password" })}
+                id={`${formId}-password`}
+                {...register("password")}
               />
-              <FieldError id={fields.password.errorId}>
-                {fields.password.errors}
-              </FieldError>
+              <FieldError>{errors.password?.message}</FieldError>
             </Field>
 
             <Field>
-              <FieldLabel htmlFor={fields.confirmPassword.id}>
+              <FieldLabel htmlFor={`${formId}-confirm-password`}>
                 Confirmar contraseña
               </FieldLabel>
               <PasswordInput
-                {...getInputProps(fields.confirmPassword, { type: "password" })}
+                id={`${formId}-confirm-password`}
+                {...register("confirmPassword")}
                 placeholder="Confirma tu contraseña"
                 autoComplete="new-password"
               />
-              <FieldError id={fields.confirmPassword.errorId}>
-                {fields.confirmPassword.errors}
-              </FieldError>
+              <FieldError>{errors.confirmPassword?.message}</FieldError>
             </Field>
 
             <Field>
-              <FieldError
-                errors={form.errors?.map((error) => ({ message: error }))}
-              />
+              <FieldError>{errors.root?.message}</FieldError>
             </Field>
 
             <Field>
@@ -119,7 +137,7 @@ export default function RegisterForm({
               </Button>
             </Field>
           </FieldGroup>
-        </Form>
+        </form>
       }
       asideContent={
         <>

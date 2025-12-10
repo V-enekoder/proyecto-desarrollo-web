@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { extractErrorMessages } from "@/lib/api";
 import { login } from "@/lib/auth";
-import { getInputProps, useForm } from "@conform-to/react";
-import { parseWithZod } from "@conform-to/zod/v4";
-import { Form, Link, redirect, useNavigation } from "react-router";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useId } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router";
 import { z } from "zod";
 import type { Route } from "./+types/login";
 
@@ -29,58 +30,72 @@ export const meta: Route.MetaFunction = () => [
   { title: "Login - Sistema de Reservas de Laboratorio - UNEG" },
 ];
 
-export async function clientAction({ request }: Route.ClientActionArgs) {
-  const formData = await request.formData();
-  const submission = parseWithZod(formData, { schema: loginSchema });
+// export async function clientAction({ request }: Route.ClientActionArgs) {
+//   const formData = await request.formData();
+//   const submission = parseWithZod(formData, { schema: loginSchema });
 
-  if (submission.status !== "success") {
-    return submission.reply();
-  }
+//   if (submission.status !== "success") {
+//     return submission.reply();
+//   }
 
-  return await login(submission.value).then(
-    () => {
-      throw redirect("/");
-    },
-    async (error) => {
-      return submission.reply({
-        formErrors: await extractErrorMessages(error),
-      });
-    },
-  );
-}
+//   return await login(submission.value).then(
+//     () => {
+//       throw redirect("/");
+//     },
+//     async (error) => {
+//       return submission.reply({
+//         formErrors: await extractErrorMessages(error),
+//       });
+//     },
+//   );
+// }
 
-export default function LoginRoute({ actionData }: Route.ComponentProps) {
-  const navigation = useNavigation();
-  const isSubmitting = navigation.state === "submitting";
-  const [form, fields] = useForm({
-    lastResult: actionData,
-    onValidate(context) {
-      return parseWithZod(context.formData, { schema: loginSchema });
-    },
+export default function LoginRoute() {
+  const formId = useId();
+  const navigate = useNavigate();
+  const form = useForm({
+    resolver: zodResolver(loginSchema),
   });
+
+  const { handleSubmit, setError, register, formState } = form;
+  const { isSubmitting, errors } = formState;
+
+  const onSubmit = async (values: z.infer<typeof loginSchema>) => {
+    try {
+      await login(values);
+      navigate("/");
+    } catch (error) {
+      const errors = await extractErrorMessages(error);
+      setError("root", { message: errors[0] });
+    }
+  };
 
   return (
     <AuthTemplate
       title="Iniciar Sesión"
       subtitle="Ingresa tus credenciales para continuar."
       content={
-        <Form noValidate method="post" id={form.id} onSubmit={form.onSubmit}>
+        <form noValidate onSubmit={handleSubmit(onSubmit)}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor={fields.username.id}>
+              <FieldLabel htmlFor={`${formId}-username`}>
                 Nombre de Usuario
               </FieldLabel>
               <Input
                 placeholder="Ingresa tu nombre de usuario"
                 autoComplete="username"
-                {...getInputProps(fields.username, { type: "text" })}
+                type="text"
+                id={`${formId}-username`}
+                {...register("username")}
               />
-              <FieldError>{fields.username.errors}</FieldError>
+              <FieldError>{errors.username?.message}</FieldError>
             </Field>
 
             <Field>
               <div className="flex justify-between gap-4">
-                <FieldLabel htmlFor={fields.password.id}>Contraseña</FieldLabel>
+                <FieldLabel htmlFor={`${formId}-password`}>
+                  Contraseña
+                </FieldLabel>
 
                 <Button
                   type="button"
@@ -94,15 +109,14 @@ export default function LoginRoute({ actionData }: Route.ComponentProps) {
               <PasswordInput
                 placeholder="Ingresa tu contraseña"
                 autoComplete="current-password"
-                {...getInputProps(fields.password, { type: "password" })}
+                id={`${formId}-password`}
+                {...register("password")}
               />
-              <FieldError>{fields.password.errors}</FieldError>
+              <FieldError>{errors.password?.message}</FieldError>
             </Field>
 
             <Field>
-              <FieldError
-                errors={form.errors?.map((error) => ({ message: error }))}
-              />
+              <FieldError>{errors.root?.message}</FieldError>
             </Field>
 
             <Field>
@@ -128,7 +142,7 @@ export default function LoginRoute({ actionData }: Route.ComponentProps) {
               </Button>
             </p>
           </FieldGroup>
-        </Form>
+        </form>
       }
       asideContent={
         <>

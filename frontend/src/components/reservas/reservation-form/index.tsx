@@ -4,51 +4,47 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import {
-  getFormProps,
-  getInputProps,
-  getTextareaProps,
-  useForm,
-  useInputControl,
-  type SubmissionResult,
-} from "@conform-to/react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { formatDate, parse } from "date-fns";
-import { Form, Link, useNavigation } from "react-router";
-import type z from "zod";
+import { useId } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { Link, useNavigate } from "react-router";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { Textarea } from "../../ui/textarea";
 import CalendarReservation from "../calendar-reservation";
-import type { reservationFormSchema } from "./schema";
+import { reservationFormAction, reservationFormSchema } from "./schema";
 
 export interface ModalReservasionProps {
-  lastResult: SubmissionResult<string[]> | null | undefined;
   availableHours: string[];
 }
 
-function ModalReservasion({
-  lastResult,
-  availableHours,
-}: ModalReservasionProps) {
-  const submitting = useNavigation().state === "submitting";
-  const [form, fields] = useForm({
-    lastResult,
-    defaultValue: {
-      date: "",
-      time: "",
-      description: "",
-    } satisfies z.infer<typeof reservationFormSchema>,
+function ReservationForm({ availableHours }: ModalReservasionProps) {
+  const navigate = useNavigate();
+  const formId = useId();
+  const form = useForm({
+    resolver: zodResolver(reservationFormSchema),
   });
+  const { register, handleSubmit, formState, setError, control } = form;
+  const { isSubmitting, errors } = formState;
 
-  const dateControl = useInputControl(fields.date);
-  const dateValue = dateControl.value
-    ? parse(dateControl.value, "yyyy-MM-dd", new Date())
+  const dateString = useWatch({ control, name: "date" });
+  const dateValue = dateString
+    ? parse(dateString, "yyyy-MM-dd", new Date())
     : undefined;
 
   return (
-    <Form
-      method="post"
-      {...getFormProps(form)}
+    <form
+      noValidate
+      onSubmit={handleSubmit(async (data) => {
+        const result = await reservationFormAction(data);
+
+        if (result?.error) {
+          setError("root", { message: result.error });
+        } else {
+          navigate("/reservas");
+        }
+      })}
       className="p-4 md:h-full md:w-auto"
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-[400px_1fr]">
@@ -73,15 +69,22 @@ function ModalReservasion({
               </p>
             </div>
             <div className="flex flex-col items-center justify-center gap-4 p-4">
-              {dateControl.value}
-              <CalendarReservation
-                selected={dateValue}
-                onSelect={(date) => {
-                  const isoDate = date ? formatDate(date, "yyyy-MM-dd") : "";
-                  dateControl.change(isoDate);
-                }}
+              <Controller
+                control={control}
+                name="date"
+                render={({ field }) => (
+                  <CalendarReservation
+                    selected={dateValue}
+                    onSelect={(date) => {
+                      const isoDate = date
+                        ? formatDate(date, "yyyy-MM-dd")
+                        : "";
+                      field.onChange(isoDate);
+                    }}
+                  />
+                )}
               />
-              <FieldError>{fields.date.errors}</FieldError>
+              <FieldError>{errors.date?.message}</FieldError>
               <p className="text-destructive px-2 text-center leading-tight font-semibold text-pretty">
                 <span>Nota:</span> Las reservas duran 2 horas para dar clases
               </p>
@@ -102,16 +105,15 @@ function ModalReservasion({
 
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor={fields.time.id}>
+              <FieldLabel htmlFor={`${formId}-time`}>
                 Selecciona la hora a reservar
               </FieldLabel>
               <Input
                 list="horas-disponibles"
-                {...getInputProps(fields.time, { type: "time" })}
+                type="time"
+                {...register("time")}
               />
-              <FieldError id={fields.time.errorId}>
-                {fields.time.errors}
-              </FieldError>
+              <FieldError>{errors.time?.message}</FieldError>
               <datalist id="horas-disponibles">
                 {availableHours.map((hour) => (
                   <option key={hour} value={hour}>
@@ -126,14 +128,15 @@ function ModalReservasion({
                 Escribe una descripcion del motivo de reserva
               </FieldLabel>
               <Textarea
-                {...getTextareaProps(fields.description)}
+                id="message"
+                {...register("description")}
+                rows={4}
                 placeholder="Escribe por que necesitas reservar este espacio"
               />
-              <FieldError id={fields.description.errorId}>
-                {fields.description.errors}
-              </FieldError>
+              <FieldError>{errors.description?.message}</FieldError>
             </Field>
           </FieldGroup>
+          <FieldError>{errors.root?.message}</FieldError>
           <Field
             orientation="horizontal"
             className="flex-col items-stretch justify-end md:flex-row md:items-center"
@@ -141,14 +144,14 @@ function ModalReservasion({
             <Button asChild type="button" variant="secondary">
               <Link to="/reservas">Cancelar</Link>
             </Button>
-            <Button type="submit" variant="default" disabled={submitting}>
+            <Button type="submit" variant="default" disabled={isSubmitting}>
               Aceptar
             </Button>
           </Field>
         </div>
       </div>
-    </Form>
+    </form>
   );
 }
 
-export default ModalReservasion;
+export default ReservationForm;
