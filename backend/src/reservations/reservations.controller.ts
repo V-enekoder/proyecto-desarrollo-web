@@ -1,17 +1,48 @@
-import { Controller, Get } from "@nestjs/common";
-import { ZodResponse } from "nestjs-zod";
-import { Auth } from "../auth/decorators/auth.decorator.js";
-import { ReservationDto } from "./reservation.dto.js";
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+} from "@nestjs/common";
 import { ReservationsService } from "./reservations.service.js";
+import {
+  CreateReservationDto,
+  UpdateReservationDto,
+} from "./dto/reservation.dto.js";
 
-@Auth()
 @Controller("reservations")
 export class ReservationsController {
   constructor(private readonly reservationsService: ReservationsService) {}
 
+  @Post()
+  create(@Body() createReservationDto: CreateReservationDto) {
+    return this.reservationsService.create(createReservationDto);
+  }
+
   @Get()
-  @ZodResponse({ type: [ReservationDto] })
-  async findAll(): Promise<ReservationDto[]> {
+  findAll() {
     return this.reservationsService.findAll();
+  }
+
+  @Get(":id")
+  findOne(@Param("id", ParseIntPipe) id: number) {
+    return this.reservationsService.findOne(id);
+  }
+
+  @Patch(":id")
+  update(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() updateReservationDto: UpdateReservationDto,
+  ) {
+    return this.reservationsService.update(id, updateReservationDto);
+  }
+
+  @Delete(":id")
+  remove(@Param("id", ParseIntPipe) id: number) {
+    return this.reservationsService.remove(id);
   }
 }
