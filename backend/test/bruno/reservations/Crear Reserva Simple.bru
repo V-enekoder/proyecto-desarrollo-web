@@ -1,0 +1,30 @@
+meta {
+  name: Crear Reserva Simple
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/reservations
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Reunión de Proyecto",
+    "startDate": "2026-02-10",
+    "defaultStartTime": "14:00:00",
+    "defaultEndTime": "16:00:00",
+    "userId": "id-de-un-usuario-existente",
+    "laboratoryId": 1,
+    "typeId": 1,
+    "stateId": 1
+  }
+}
+
+tests {
+  test("Debe crear la reserva", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

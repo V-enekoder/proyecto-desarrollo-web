@@ -1,0 +1,32 @@
+meta {
+  name: Crear Reserva Recurrente
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/reservations
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Clase Semanal de Redes",
+    "startDate": "2026-02-02",
+    "endDate": "2026-03-02",
+    "rrule": "FREQ=WEEKLY;BYDAY=MO",
+    "defaultStartTime": "07:00:00",
+    "defaultEndTime": "09:00:00",
+    "userId": "id-de-un-usuario-existente",
+    "laboratoryId": 1,
+    "typeId": 1,
+    "stateId": 1
+  }
+}
+
+tests {
+  test("Debe crear la reserva y múltiples ocupaciones", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

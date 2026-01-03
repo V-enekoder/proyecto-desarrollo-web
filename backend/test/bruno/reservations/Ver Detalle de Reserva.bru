@@ -1,0 +1,19 @@
+meta {
+  name: Ver Detalle de Reserva
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}/reservations/1
+  body: none
+  auth: none
+}
+
+tests {
+  test("Debe contener ocupaciones", function() {
+    const data = res.getBody();
+    expect(data.ocupations).to.be.an('array');
+    expect(data.ocupations.length).to.be.at.least(1);
+  });
+}
