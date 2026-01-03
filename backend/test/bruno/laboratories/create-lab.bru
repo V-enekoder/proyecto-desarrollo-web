@@ -1,0 +1,30 @@
+meta {
+  name: Crear Laboratorio
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/laboratories
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Villa Asia",
+    "number": 1,
+    "active": true
+  }
+}
+
+tests {
+  test("Debe retornar 201 Created", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("El nombre debe ser correcto", function() {
+    const data = res.getBody();
+    expect(data.name).to.equal("Villa Asia");
+  });
+}
