@@ -1,7 +1,15 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  InternalServerErrorException
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Repository, DataSource } from "typeorm";
+import pkgRRule from 'rrule';
+const { RRule, rrulestr } = pkgRRule;
 import { Reservation } from "./entities/reservation.entity.js";
+import { Ocupation } from "./entities/ocupation.entity.js";
 import {
   CreateReservationDto,
   UpdateReservationDto,
@@ -12,6 +20,8 @@ export class ReservationsService {
   constructor(
     @InjectRepository(Reservation)
     private readonly reservationRepo: Repository<Reservation>,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(dto: CreateReservationDto) {
@@ -20,8 +30,8 @@ export class ReservationsService {
     await queryRunner.startTransaction();
 
     try {
-      // 1. Creamos e insertamos la Reserva
-      const reservation = this.reservationRepo.create({
+
+      const reservation = queryRunner.manager.create(Reservation, {
         ...dto,
         user: { id: dto.userId } as any,
         laboratory: { id: dto.laboratoryId } as any,
@@ -30,14 +40,14 @@ export class ReservationsService {
       });
       const savedReservation = await queryRunner.manager.save(reservation);
 
-      // 2. Generar las fechas de las ocupaciones
+
       const dates = this.generateOcupationDates(
         dto.startDate,
         dto.endDate,
         dto.rrule,
       );
 
-      // 3. Crear los objetos de Ocupación
+
       const ocupations = dates.map((date) => {
         return queryRunner.manager.create(Ocupation, {
           date: date,
@@ -48,64 +58,61 @@ export class ReservationsService {
         });
       });
 
-      // 4. Guardar todas las ocupaciones
+
       await queryRunner.manager.save(Ocupation, ocupations);
 
-      // Si todo salió bien, confirmamos los cambios
+
       await queryRunner.commitTransaction();
 
-      // Retornamos la reserva con sus ocupaciones
+
       return savedReservation;
     } catch (error) {
-      // Si algo falla (ej: choque de horario por el índice UNIQUE), deshacemos todo
-      await queryRunner.rollbackTransaction();
+          await queryRunner.rollbackTransaction();
 
-      if (error.code === "23505") {
-        throw new ConflictException(
-          "El laboratorio ya está ocupado en una de las fechas seleccionadas.",
-        );
-      }
-      throw new InternalServerErrorException(
-        "Error al crear la reserva y sus ocupaciones",
-      );
-    } finally {
+          console.error("Detaile del error al crear reserva:", error);
+
+          if (error.code === "23505") {
+            throw new ConflictException(
+              "El laboratorio ya está ocupado en una de las fechas seleccionadas.",
+            );
+          }
+          throw new InternalServerErrorException(error.message);
+        } finally {
+
       await queryRunner.release();
     }
   }
 
-  // Función auxiliar para calcular las fechas
-  private generateOcupationDates(
-    start: string,
-    end?: string,
-    rruleStr?: string,
-  ): Date[] {
-    const startDate = new Date(start);
+  private generateOcupationDates(start: string, end?: string, rruleStr?: string): Date[] {
+    const startDate = new Date(`${start}T12:00:00`);
 
-    // Si no hay rrule, solo es una ocupación el día de inicio
     if (!rruleStr) {
       return [startDate];
     }
 
     try {
-      const ruleOptions = RRule.parseString(rruleStr);
-      ruleOptions.dtstart = startDate;
+      const rule = rrulestr(rruleStr, { dtstart: startDate });
 
-      // Si hay fecha de fin, la añadimos a la regla
-      if (end) {
-        ruleOptions.until = new Date(end);
+      let dates: Date[];
+
+      if (!rule.options.count && !rule.options.until) {
+        const options = rule.options;
+        if (end) {
+          options.until = new Date(`${end}T23:59:59`);
+        } else {
+          options.count = 12;
+        }
+        dates = new RRule(options).all();
       } else {
-        // Si no hay fin, limitamos por seguridad (ej: máximo 15 ocurrencias o 3 meses)
-        ruleOptions.count = 12;
+        dates = rule.all();
       }
 
-      const rule = new RRule(ruleOptions);
-      return rule.all();
+      return dates;
     } catch (e) {
-      // Si el rrule es inválido, devolvemos al menos la fecha de inicio
+      console.error("Error en RRULE:", e);
       return [startDate];
     }
   }
-
   async findAll() {
     return await this.reservationRepo.find({
       relations: [

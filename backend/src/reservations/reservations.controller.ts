@@ -12,7 +12,7 @@ import { ReservationsService } from "./reservations.service.js";
 import {
   CreateReservationDto,
   UpdateReservationDto,
-} from "./dto/reservation.dto.js";
+} from "./reservation.dto.js";
 
 @Controller("reservations")
 export class ReservationsController {

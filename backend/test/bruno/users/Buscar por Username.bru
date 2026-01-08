@@ -1,0 +1,17 @@
+meta {
+  name: Buscar por Username
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/users/username/victor_hugo
+  body: none
+  auth: none
+}
+
+tests {
+  test("Status debe ser 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

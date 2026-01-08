@@ -1,0 +1,25 @@
+meta {
+  name: Crear Reserva con repetición
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/reservations
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Mantenimiento Mensual de Equipos",
+    "startDate": "2026-01-07",
+    "defaultStartTime": "13:00:00",
+    "defaultEndTime": "17:00:00",
+    "rrule": "FREQ=MONTHLY;BYDAY=-1FR;COUNT=6",
+    "userId": "trcWLgQDJSKGDGvS_brEt",
+    "laboratoryId": 1,
+    "typeId": 1,
+    "stateId": 1
+  }
+}
