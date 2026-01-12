@@ -1,0 +1,22 @@
+meta {
+  name: Listar todos los Laboratorios
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/laboratories
+  body: none
+  auth: none
+}
+
+tests {
+  test("Debe retornar 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("Debe ser un arreglo", function() {
+    const data = res.getBody();
+    expect(Array.isArray(data)).to.be.true;
+  });
+}

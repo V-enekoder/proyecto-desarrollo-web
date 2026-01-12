@@ -1,4 +1,18 @@
-import { RegisterSchema } from "@uneg-lab/api-types/auth.js";
-import { createZodDto } from "nestjs-zod";
+import { IsString, IsEmail, IsOptional, MinLength } from 'class-validator';
 
-export class RegisterDto extends createZodDto(RegisterSchema) {}
+export class RegisterDto {
+  @IsString()
+  @MinLength(3)
+  username: string;
+
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
+  @IsString()
+  @MinLength(6)
+  password: string;
+
+  @IsString()
+  name: string;
+}

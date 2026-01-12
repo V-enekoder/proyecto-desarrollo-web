@@ -1,0 +1,18 @@
+meta {
+  name: Crear Clase
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/classes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "professor": "Ing. Victor Hugo",
+    "reservationId": 7
+  }
+}

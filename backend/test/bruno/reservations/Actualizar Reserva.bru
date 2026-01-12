@@ -1,0 +1,17 @@
+meta {
+  name: Actualizar Reserva
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{base_url}}/reservations/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Nombre Actualizado del Evento"
+  }
+}

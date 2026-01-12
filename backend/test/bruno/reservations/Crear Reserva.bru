@@ -1,0 +1,24 @@
+meta {
+  name: Crear Reserva
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/reservations
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Clase de Algoritmos II",
+    "startDate": "2026-03-01",
+    "defaultStartTime": "08:00:00",
+    "defaultEndTime": "10:00:00",
+    "userId": "trcWLgQDJSKGDGvS_brEt",
+    "laboratoryId": 1,
+    "typeId": 1,
+    "stateId": 1
+  }
+}

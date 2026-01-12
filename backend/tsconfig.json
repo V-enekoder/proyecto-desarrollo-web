@@ -12,14 +12,18 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
+    "types": ["node", "jest"],
     "sourceMap": true,
     "outDir": "./dist",
+    "paths": {
+      "@uneg-lab/api-types/*": ["../packages/api-types/lib/*"],
+    },
     // "baseUrl": "./",
     "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+  },
 }
