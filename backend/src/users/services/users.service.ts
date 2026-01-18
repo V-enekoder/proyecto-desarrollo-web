@@ -15,7 +15,7 @@ export class UsersService {
   findOne(id: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { id },
-      cache: { id: `user:by_id:${id}`, milliseconds: 60_000 },
+      // cache: { id: `user:by_id:${id}`, milliseconds: 60_000 },
     });
   }
 
@@ -26,7 +26,7 @@ export class UsersService {
   findOneByUsername(username: string) {
     return this.usersRepository.findOne({
       where: { username: ILike(username) },
-      cache: { id: `user:by_username:${username}`, milliseconds: 60_000 },
+      // cache: { id: `user:by_username:${username}`, milliseconds: 60_000 },
     });
   }
 
