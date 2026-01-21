@@ -1,47 +1,13 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { extractErrorMessages } from "@/lib/api";
 import { laboratoriesService, type Laboratory } from "@/services/laboratories";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import { Edit2, Plus, Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "../ui/drawer";
-
-type LaboratoryDraft = {
-  name: string;
-  number: string;
-  active: boolean;
-};
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { Edit2, Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { CreateLaboratoryModal } from "./create-laboratory-modal";
+import { EditLaboratoryDrawer } from "./edit-laboratory-drawer";
 
 export function LaboratoriesManager() {
-  const isDesktop = useMediaQuery("(min-width: 768px)");
-  const queryClient = useQueryClient();
-
   const { data: labs } = useSuspenseQuery({
     queryKey: ["laboratories"],
     queryFn: () => laboratoriesService.getAll(),
@@ -49,38 +15,8 @@ export function LaboratoriesManager() {
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
-  const [selectedId, setSelectedId] = useState<number | null>(
-    labs[0]?.id ?? null,
-  );
-  const [draft, setDraft] = useState<LaboratoryDraft | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [createDraft, setCreateDraft] = useState<LaboratoryDraft>({
-    name: "",
-    number: "",
-    active: true,
-  });
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  if (!selectedId && labs.length > 0) {
-    setSelectedId(labs[0].id);
-  }
-
-  useEffect(() => {
-    const selected =
-      labs.find((lab: Laboratory) => lab.id === selectedId) ?? null;
-    if (selected) {
-      setDraft({
-        name: selected.name,
-        number: String(selected.number),
-        active: selected.active,
-      });
-      setErrorMessage(null);
-    }
-  }, [labs, selectedId]);
 
   const filteredLabs = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -96,114 +32,10 @@ export function LaboratoriesManager() {
     });
   }, [labs, query, filter]);
 
-  const selectedLab =
-    labs.find((lab: Laboratory) => lab.id === selectedId) ?? null;
-  const isDirty =
-    !!selectedLab &&
-    !!draft &&
-    (draft.name.trim() !== selectedLab.name ||
-      Number(draft.number) !== selectedLab.number ||
-      draft.active !== selectedLab.active);
-
-  const updateMutation = useMutation({
-    mutationFn: async (payload: { id: number; data: Partial<Laboratory> }) => {
-      return laboratoriesService.update(payload.id, payload.data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["laboratories"] });
-      setEditOpen(false);
-    },
-    onError: async (error) => {
-      const [message] = await extractErrorMessages(error);
-      setErrorMessage(message ?? "No se pudo guardar los cambios.");
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (data: LaboratoryDraft) => {
-      return laboratoriesService.create({
-        name: data.name.trim(),
-        number: Number(data.number),
-        active: data.active,
-      });
-    },
-    onSuccess: (created) => {
-      queryClient.invalidateQueries({ queryKey: ["laboratories"] });
-      setSelectedId(created.id);
-      setEditOpen(true);
-      setCreateOpen(false);
-      resetCreateDraft();
-    },
-    onError: async (error) => {
-      const [message] = await extractErrorMessages(error);
-      setCreateError(message ?? "No se pudo crear el laboratorio.");
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => laboratoriesService.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["laboratories"] });
-      setDeleteOpen(false);
-      setEditOpen(false);
-      setSelectedId(null);
-    },
-    onError: async (error) => {
-      const [message] = await extractErrorMessages(error);
-      setDeleteError(message ?? "No se pudo eliminar el laboratorio.");
-    },
-  });
-
-  const canSave =
-    !!draft &&
-    draft.name.trim().length >= 3 &&
-    Number.isFinite(Number(draft.number)) &&
-    Number(draft.number) > 0 &&
-    isDirty &&
-    !updateMutation.isPending;
-
-  const handleSave = () => {
-    if (!selectedLab || !draft) return;
-    updateMutation.mutate({
-      id: selectedLab.id,
-      data: {
-        name: draft.name.trim(),
-        number: Number(draft.number),
-        active: draft.active,
-      },
-    });
-  };
-
-  const handleCancel = () => {
-    if (!selectedLab) return;
-    setDraft({
-      name: selectedLab.name,
-      number: String(selectedLab.number),
-      active: selectedLab.active,
-    });
-    setErrorMessage(null);
-  };
-
-  const handleDelete = () => {
-    if (!selectedLab) return;
-    deleteMutation.mutate(selectedLab.id);
-  };
-
-  const resetCreateDraft = () => {
-    setCreateDraft({ name: "", number: "", active: true });
-    setCreateError(null);
-  };
-
-  const canCreate =
-    createDraft.name.trim().length >= 3 &&
-    Number.isFinite(Number(createDraft.number)) &&
-    Number(createDraft.number) > 0 &&
-    !createMutation.isPending;
-
-  const handleCreate = () => {
-    if (!canCreate) return;
-    createMutation.mutate(createDraft);
-  };
+  const selectedLab = useMemo(
+    () => labs.find((lab: Laboratory) => lab.id === selectedId) ?? null,
+    [labs, selectedId],
+  );
 
   return (
     <section className="min-h-full bg-linear-to-br from-gray-50 to-gray-100 text-slate-900">
@@ -218,110 +50,12 @@ export function LaboratoriesManager() {
                 Gestión simplificada de espacios y disponibilidad.
               </p>
             </div>
-            <Dialog
-              open={createOpen}
-              onOpenChange={(open) => {
-                setCreateOpen(open);
-                if (!open) resetCreateDraft();
+            <CreateLaboratoryModal
+              onCreated={(id) => {
+                setSelectedId(id);
+                setEditOpen(true);
               }}
-            >
-              <DialogTrigger asChild>
-                <Button className="gap-2" type="button">
-                  <Plus className="size-4" />
-                  Añadir Nuevo Laboratorio
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Nuevo laboratorio</DialogTitle>
-                  <DialogDescription>
-                    Registra un laboratorio y su disponibilidad.
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-900">
-                      Nombre del Laboratorio
-                    </label>
-                    <Input
-                      value={createDraft.name}
-                      onChange={(event) =>
-                        setCreateDraft((prev) => ({
-                          ...prev,
-                          name: event.target.value,
-                        }))
-                      }
-                      placeholder="Laboratorio de Redes"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-900">
-                      Número de Laboratorio
-                    </label>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={createDraft.number}
-                      onChange={(event) =>
-                        setCreateDraft((prev) => ({
-                          ...prev,
-                          number: event.target.value,
-                        }))
-                      }
-                      placeholder="201"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4">
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">
-                        Estado del Laboratorio
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Habilitar acceso y reservas
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={createDraft.active}
-                        onCheckedChange={(value) =>
-                          setCreateDraft((prev) => ({
-                            ...prev,
-                            active: Boolean(value),
-                          }))
-                        }
-                      />
-                      <span className="text-xs text-slate-400">
-                        {createDraft.active ? "Activo" : "Inactivo"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {createError && (
-                    <p className="text-destructive text-sm">{createError}</p>
-                  )}
-                </div>
-
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline" type="button">
-                      Cancelar
-                    </Button>
-                  </DialogClose>
-                  <Button
-                    type="button"
-                    onClick={handleCreate}
-                    disabled={!canCreate}
-                  >
-                    {createMutation.isPending
-                      ? "Creando..."
-                      : "Crear Laboratorio"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            />
           </div>
         </header>
 
@@ -444,161 +178,13 @@ export function LaboratoriesManager() {
           </div>
         </div>
 
-        <Drawer
+        <EditLaboratoryDrawer
+          laboratory={selectedLab}
           open={editOpen}
           onOpenChange={setEditOpen}
-          direction={isDesktop ? "right" : "bottom"}
-        >
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>Edición rápida</DrawerTitle>
-              <DrawerDescription>
-                {selectedLab
-                  ? `Laboratorio ${selectedLab.name}`
-                  : "Selecciona un laboratorio para editar"}
-              </DrawerDescription>
-            </DrawerHeader>
-
-            {selectedLab && draft ? (
-              <div className="space-y-4 p-4">
-                <div className="text-xs text-slate-500">
-                  ID: {selectedLab.id}
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-900">
-                    Nombre del Laboratorio
-                  </label>
-                  <Input
-                    value={draft.name}
-                    onChange={(event) =>
-                      setDraft((prev) =>
-                        prev ? { ...prev, name: event.target.value } : prev,
-                      )
-                    }
-                  />
-                  <p className="text-xs text-slate-500">
-                    Nombre descriptivo visible para los usuarios.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-900">
-                    Número de Laboratorio
-                  </label>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={draft.number}
-                    onChange={(event) =>
-                      setDraft((prev) =>
-                        prev ? { ...prev, number: event.target.value } : prev,
-                      )
-                    }
-                  />
-                  <p className="text-xs text-slate-500">
-                    Código único de identificación de sala.
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">
-                      Estado del Laboratorio
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      Habilitar acceso y reservas
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={draft.active}
-                      onCheckedChange={(value) =>
-                        setDraft((prev) =>
-                          prev ? { ...prev, active: Boolean(value) } : prev,
-                        )
-                      }
-                    />
-                    <span className="text-xs text-slate-400">
-                      {draft.active ? "Activo" : "Inactivo"}
-                    </span>
-                  </div>
-                </div>
-
-                {errorMessage && (
-                  <p className="text-destructive text-sm">{errorMessage}</p>
-                )}
-                {deleteError && (
-                  <p className="text-destructive text-sm">{deleteError}</p>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500">
-                Selecciona un laboratorio para ver su configuración.
-              </p>
-            )}
-
-            <DrawerFooter>
-              <Button
-                variant="destructive"
-                type="button"
-                disabled={!selectedLab || deleteMutation.isPending}
-                onClick={() => setDeleteOpen(true)}
-              >
-                Eliminar
-              </Button>
-              <DrawerClose asChild>
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={handleCancel}
-                  disabled={updateMutation.isPending}
-                >
-                  Cancelar
-                </Button>
-              </DrawerClose>
-              <Button type="button" onClick={handleSave} disabled={!canSave}>
-                {updateMutation.isPending ? "Guardando..." : "Guardar Cambios"}
-              </Button>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+          onDeleted={() => setSelectedId(null)}
+        />
       </div>
-      <Dialog
-        open={deleteOpen}
-        onOpenChange={(open) => {
-          setDeleteOpen(open);
-          if (!open) setDeleteError(null);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Eliminar laboratorio</DialogTitle>
-            <DialogDescription>
-              {selectedLab
-                ? `Se eliminará "${selectedLab.name}" y esta acción no se puede deshacer.`
-                : "Selecciona un laboratorio para eliminar."}
-            </DialogDescription>
-          </DialogHeader>
-          {deleteError && (
-            <p className="text-destructive text-sm">{deleteError}</p>
-          )}
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline" type="button">
-                Cancelar
-              </Button>
-            </DialogClose>
-            <Button
-              variant="destructive"
-              type="button"
-              onClick={handleDelete}
-              disabled={!selectedLab || deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? "Eliminando..." : "Eliminar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </section>
   );
 }
