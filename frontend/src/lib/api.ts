@@ -1,7 +1,7 @@
-import ky, { HTTPError, isHTTPError, isTimeoutError } from "ky";
-import { getAccessToken, refreshSession } from "./auth";
+import ky, { isHTTPError, isTimeoutError } from "ky";
 import type { UseFormSetError } from "react-hook-form";
 import type z from "zod";
+import { getAccessToken, refreshSession } from "./auth";
 
 export const apiClient = ky.create({
   prefixUrl: "/api",
@@ -18,33 +18,30 @@ export const apiClient = ky.create({
         }
       },
     ],
-    beforeRetry: [
-      async ({ error, retryCount }) => {
-        if (error instanceof HTTPError) {
-          if (error.response.status === 401) {
-            if (retryCount > 1) {
-              console.warn("Max retries reached. Redirecting to login.");
-              window.location.href = "/login";
-              return;
-            }
-            await refreshSession();
+    afterResponse: [
+      async (request, _options, response, state) => {
+        if (response.status === 401) {
+          let token;
+
+          if (state.retryCount > 1) {
+            console.warn("Max retries reached. Redirecting to login.");
+          } else {
+            token = await refreshSession().then((res) => res?.accessToken);
+          }
+
+          if (token) {
+            const headers = new Headers(request.headers);
+            headers.set("Authorization", `Bearer ${token}`);
+
+            return ky.retry({
+              request: new Request(request, { headers }),
+              code: "TOKEN_REFRESHED",
+            });
+          } else {
+            window.location.href = "/login";
           }
         }
       },
-    ],
-  },
-  retry: {
-    limit: 2,
-    statusCodes: [401],
-    methods: [
-      "get",
-      "put",
-      "head",
-      "delete",
-      "options",
-      "trace",
-      "post",
-      "patch",
     ],
   },
 });
