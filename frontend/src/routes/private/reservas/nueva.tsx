@@ -16,84 +16,75 @@ export default function NuevaReserva({ loaderData }: Route.ComponentProps) {
   const [stateEventType, setEventType] = useState([]);
   const [reserved, sethoursReserved] = useState([]);
 
+  const fetchData = async (route: string, token: string) => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_HOSTNAME_BACKEND}/${route}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error(`Error: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      return data;
+    } catch (error) {
+      console.error("Error al obtener laboratorios:", error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
-    const fetchDataLaboratory = async () => {
-      const token = await getAccessToken();
-
+    const initReservation = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/laboratories", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const token = await getAccessToken();
+        const [resLabs, resTypes, resReserved] = await Promise.all([
+          fetchData("api/laboratories", token as string).catch((e) => ({
+            error: "labs",
+            msg: e,
+          })),
+          fetchData("api/reserve-types", token as string).catch((e) => ({
+            error: "types",
+            msg: e,
+          })),
+          fetchData("api/reservations", token as string).catch((e) => ({
+            error: "resv",
+            msg: e,
+          })),
+        ]);
 
-        if (!res.ok) {
-          throw new Error(`Error: ${res.status}`);
+        if (resLabs.error || resTypes.error || resReserved.error) {
+          console.error("¡Una petición falló!", {
+            resLabs,
+            resTypes,
+            resReserved,
+          });
+          return;
         }
 
-        const data = await res.json();
-
-        setLaboratorys(data);
-      } catch (error) {
-        console.error("Error al obtener laboratorios:", error);
+        setLaboratorys(resLabs);
+        setEventType(resTypes);
+        sethoursReserved(
+          resReserved.map((reser: any) => ({
+            startDate: reser.startDate,
+            defaultStartTime: reser.defaultStartTime,
+          })),
+        );
+      } catch (err) {
+        console.error("Error crítico en initReservation:", err);
+        throw err;
       }
     };
 
-    const fetchDataTypeActivity = async () => {
-      const token = await getAccessToken();
-      try {
-        const res = await fetch("http://localhost:3000/api/reserve-types", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error(`Error: ${res.status}`);
-        }
-
-        const data = await res.json();
-
-        setEventType(data);
-      } catch (error) {
-        console.error("Error al obtener laboratorios:", error);
-      }
-    };
-
-    const reservedHours = async () => {
-      const token = await getAccessToken();
-      try {
-        const res = await fetch("http://localhost:3000/api/reservations", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error(`Error: ${res.status}`);
-        }
-
-        const data = await res.json();
-
-        const reserved = data.map((reser: any) => ({
-          startDate: reser.startDate,
-          defaultStartTime: reser.defaultStartTime,
-        }));
-        sethoursReserved(reserved);
-      } catch (error) {
-        console.error("Error al obtener laboratorios:", error);
-      }
-    };
-
-    reservedHours();
-    fetchDataTypeActivity();
-    fetchDataLaboratory();
+    initReservation();
   }, []);
 
   return (
