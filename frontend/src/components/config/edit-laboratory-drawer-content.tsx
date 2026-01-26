@@ -54,7 +54,7 @@ export function EditLaboratoryDrawerContent({
       return laboratoriesService.getById(laboratory.id);
     },
     enabled: open && !!laboratory?.id,
-    refetchOnMount: true,
+    refetchOnMount: "always",
   });
 
   const currentLab = labQuery.data ?? laboratory;
