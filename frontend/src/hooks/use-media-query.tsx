@@ -1,7 +1,4 @@
-import { Monitor, Moon, Smartphone, Sun } from "lucide-react";
 import * as React from "react";
-
-// ============================================================================
 
 interface UseMediaQueryOptions {
   defaultValue?: boolean;
@@ -51,5 +48,3 @@ export function useMediaQuery(
 }
 
 export type { UseMediaQueryOptions };
-
-// ============================================================================
