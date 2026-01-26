@@ -1,31 +1,12 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { apiClient } from "@/lib/api";
-import { ReservationSchema } from "@uneg-lab/api-types/reservation";
 import { Plus } from "lucide-react";
 import { Suspense, useState } from "react";
-import { Await, Link } from "react-router";
+import { Link } from "react-router";
 import type { Route } from "./+types";
-
-export function clientLoader({ request: { signal } }: Route.ClientLoaderArgs) {
-  return {
-    reservas: apiClient
-      .get("reservations", { signal })
-      .json()
-      .then(ReservationSchema.array().parse),
-  };
-}
+import { ReservationsTable } from "./reservations-table";
 
 export default function Reservas({ loaderData }: Route.ComponentProps) {
   const [activeTab, setActiveTab] = useState<"reservas" | "solicitudes">(
@@ -69,48 +50,7 @@ export default function Reservas({ loaderData }: Route.ComponentProps) {
 
         <h3 className="mb-4 font-semibold">Lista De Reservas</h3>
         <Suspense fallback={<Skeleton />}>
-          <Await resolve={loaderData.reservas}>
-            {(reservas) => (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead>Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reservas.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell>{r.id}</TableCell>
-                      <TableCell>{r.name}</TableCell>
-                      <TableCell>{r.startDate}</TableCell>
-                      <TableCell>
-                        {r.stateId === "Pendiente" && (
-                          <Badge variant="destructive">{r.stateId}</Badge>
-                        )}
-                        {r.stateId === "Aprobada" && (
-                          <Badge variant="secondary">{r.stateId}</Badge>
-                        )}
-                        {r.stateId === "Cancelada" && (
-                          <Badge variant="outline">{r.stateId}</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>{r.descripcion}</TableCell>
-                      <TableCell>
-                        <Button asChild variant="link" size="sm">
-                          <Link to={`/reservas/${r.id}`}>Detalles</Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </Await>
+          <ReservationsTable />
         </Suspense>
       </div>
     </section>
