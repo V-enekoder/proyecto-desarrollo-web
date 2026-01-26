@@ -1,5 +1,7 @@
 import ReservationForm from "@/components/reservas/reservation-form";
 import { AvailableHours } from "@/components/reservas/reservation-form/schema";
+import { apiClient } from "@/lib/api";
+import { useEffect, useState } from "react";
 import type { Route } from "./+types/nueva";
 
 export async function clientLoader() {
@@ -9,5 +11,62 @@ export async function clientLoader() {
 }
 
 export default function NuevaReserva({ loaderData }: Route.ComponentProps) {
-  return <ReservationForm availableHours={loaderData.availableHours} />;
+  const [laboratorys, setLaboratorys] = useState<any[]>([]);
+  const [stateEventType, setEventType] = useState<any[]>([]);
+  const [reserved, sethoursReserved] = useState<any[]>([]);
+
+  const fetchData = async <T,>(route: string) => {
+    try {
+      const res = await apiClient.get(route, { throwHttpErrors: true });
+      const data = await res.json<T>();
+
+      return { data };
+    } catch (error: any) {
+      return { error: error as Error };
+    }
+  };
+
+  useEffect(() => {
+    const initReservation = async () => {
+      try {
+        const [resLabs, resTypes, resReserved] = await Promise.all([
+          fetchData<any[]>("laboratories"),
+          fetchData<any[]>("reserve-types"),
+          fetchData<any[]>("reservations"),
+        ]);
+
+        if (resLabs.error || resTypes.error || resReserved.error) {
+          console.error("¡Una petición falló!", {
+            resLabs,
+            resTypes,
+            resReserved,
+          });
+          return;
+        }
+
+        setLaboratorys(resLabs.data);
+        setEventType(resTypes.data);
+        sethoursReserved(
+          resReserved.data.map((reser: any) => ({
+            startDate: reser.startDate,
+            defaultStartTime: reser.defaultStartTime,
+          })),
+        );
+      } catch (err) {
+        console.error("Error crítico en initReservation:", err);
+        throw err;
+      }
+    };
+
+    initReservation();
+  }, []);
+
+  return (
+    <ReservationForm
+      availableHours={loaderData.availableHours}
+      availableLaboratory={laboratorys}
+      stateTypeEvent={stateEventType}
+      reserved={reserved}
+    />
+  );
 }
