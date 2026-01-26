@@ -4,6 +4,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useUser } from "@/lib/auth";
+import { getInitials } from "@/lib/utils";
 import AppSidebar, { type NavSection } from "./app-sidebar";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
@@ -45,10 +46,4 @@ export default function PrivateLayout({
       </SidebarInset>
     </SidebarProvider>
   );
-}
-
-function getInitials(name: string) {
-  const regex = /\b\w/g;
-  const initials = name.match(regex)?.join("").toUpperCase() || "";
-  return initials.slice(0, 2);
 }

@@ -1,19 +1,30 @@
 import {
-  Injectable,
-  NotFoundException,
   ConflictException,
+  Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, DataSource } from "typeorm";
+import { paginate, PaginateConfig, PaginateQuery } from "nestjs-paginate";
 import pkgRRule from "rrule";
-const { RRule, rrulestr } = pkgRRule;
-import { Reservation } from "./entities/reservation.entity.js";
+import { DataSource, Repository } from "typeorm";
 import { Ocupation } from "./entities/ocupation.entity.js";
+import { Reservation } from "./entities/reservation.entity.js";
 import {
   CreateReservationDto,
   UpdateReservationDto,
 } from "./reservation.dto.js";
+
+const { RRule, rrulestr } = pkgRRule;
+
+export const RESERVATION_PAGINATION_CONFIG = {
+  sortableColumns: ["createdAt", "id", "name"],
+  nullSort: "last",
+  defaultSortBy: [["createdAt", "DESC"]],
+  searchableColumns: ["name", "user.name", "laboratory.name"],
+  relations: ["user", "laboratory", "type", "state", "classInstance", "event"],
+  defaultLimit: 20,
+} satisfies PaginateConfig<Reservation>;
 
 @Injectable()
 export class ReservationsService {
@@ -110,18 +121,12 @@ export class ReservationsService {
       return [startDate];
     }
   }
-  async findAll() {
-    return await this.reservationRepo.find({
-      relations: [
-        "user",
-        "laboratory",
-        "type",
-        "state",
-        "classInstance",
-        "event",
-      ],
-      order: { createdAt: "DESC" },
-    });
+  async search(query: PaginateQuery) {
+    return await paginate(
+      query,
+      this.reservationRepo,
+      RESERVATION_PAGINATION_CONFIG,
+    );
   }
 
   async findOne(id: number) {

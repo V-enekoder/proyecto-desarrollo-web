@@ -51,6 +51,7 @@
     "ioredis": "^5.9.2",
     "ms": "4.0.0-nightly.202508271359",
     "nanoid": "^5.1.6",
+    "nestjs-paginate": "^12.8.3",
     "nestjs-zod": "catalog:",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
