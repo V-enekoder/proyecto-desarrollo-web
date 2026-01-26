@@ -9,6 +9,7 @@
   "scripts": {
     "build": "pnpm run typecheck && tsdown",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "dev": "tsdown --log-level=error --watch --on-success \"node --enable-source-maps dist/main.mjs\"",
     "start": "nest start",
     "start:dev:nest": "nest start --watch",
     "start:dev": "tsdown --log-level=error --watch --on-success \"node --enable-source-maps dist/main.mjs\"",
