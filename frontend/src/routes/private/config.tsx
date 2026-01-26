@@ -1,4 +1,5 @@
 import { LaboratoriesManager } from "@/components/config/laboratories-manager";
+import { UsersManager } from "@/components/config/users-manager";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Suspense } from "react";
@@ -30,13 +31,10 @@ export default function Config() {
           </Suspense>
         </TabsContent>
 
-        <TabsContent value="users">
-          <div className="rounded-lg border border-dashed p-20 text-center">
-            <h3 className="text-lg font-medium">Gestión de Usuarios</h3>
-            <p className="text-muted-foreground">
-              Próximamente estaremos implementando la sección de usuarios.
-            </p>
-          </div>
+        <TabsContent value="users" className="size-full">
+          <Suspense fallback={<Skeleton className="h-150 w-full" />}>
+            <UsersManager />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="general">

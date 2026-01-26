@@ -4,11 +4,15 @@ import {
   Get,
   NotFoundException,
   Param,
+  Patch,
   Post,
 } from "@nestjs/common";
 import { Auth } from "../auth/decorators/auth.decorator.js";
+import { RequirePermissions } from "../auth/decorators/permissions.decorator.js";
 import { RegisterDto } from "../auth/dtos/register.dto.js";
 import { UsersService } from "./services/users.service.js";
+import { ChangeUserRoleDto } from "./dto/change-user-role.dto.js";
+import { PermissionEnum } from "../auth/auth.permissions.js";
 
 @Auth()
 @Controller("users")
@@ -18,6 +22,13 @@ export class UsersController {
   @Post()
   async create(@Body() registerDto: RegisterDto) {
     return await this.usersService.create(registerDto);
+  }
+
+  // Separate endpoint to change role for safety
+  @RequirePermissions(PermissionEnum.UPDATE_USERS)
+  @Patch(":id/role")
+  async changeRole(@Param("id") id: string, @Body() dto: ChangeUserRoleDto) {
+    return await this.usersService.changeRole(id, dto.role);
   }
 
   @Get(":id")

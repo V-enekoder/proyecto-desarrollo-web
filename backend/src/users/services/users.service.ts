@@ -1,9 +1,14 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { ILike, Repository } from "typeorm";
 import { User } from "../entities/user.entity.js";
 import { RoleEnum } from "@uneg-lab/api-types/auth.js";
 import { RegisterDto } from "../../auth/dtos/register.dto.js";
+import { UpdateUserDto } from "../dto/update-user.dto.js";
 
 @Injectable()
 export class UsersService {
@@ -60,6 +65,16 @@ export class UsersService {
       role,
     });
 
+    return await this.usersRepository.save(user);
+  }
+
+  async changeRole(id: string, role: RoleEnum): Promise<User> {
+    const user = await this.findOne(id);
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    }
+
+    user.role = role;
     return await this.usersRepository.save(user);
   }
 }

@@ -86,17 +86,17 @@ export default function Reservas({ loaderData }: Route.ComponentProps) {
                   {reservas.map((r) => (
                     <TableRow key={r.id}>
                       <TableCell>{r.id}</TableCell>
-                      <TableCell>{r.nombre}</TableCell>
-                      <TableCell>{r.fecha}</TableCell>
+                      <TableCell>{r.name}</TableCell>
+                      <TableCell>{r.startDate}</TableCell>
                       <TableCell>
-                        {r.estado === "Pendiente" && (
-                          <Badge variant="destructive">{r.estado}</Badge>
+                        {r.stateId === "Pendiente" && (
+                          <Badge variant="destructive">{r.stateId}</Badge>
                         )}
-                        {r.estado === "Aprobada" && (
-                          <Badge variant="secondary">{r.estado}</Badge>
+                        {r.stateId === "Aprobada" && (
+                          <Badge variant="secondary">{r.stateId}</Badge>
                         )}
-                        {r.estado === "Cancelada" && (
-                          <Badge variant="outline">{r.estado}</Badge>
+                        {r.stateId === "Cancelada" && (
+                          <Badge variant="outline">{r.stateId}</Badge>
                         )}
                       </TableCell>
                       <TableCell>{r.descripcion}</TableCell>

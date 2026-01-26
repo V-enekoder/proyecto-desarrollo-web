@@ -2,10 +2,9 @@ import { z } from "zod";
 
 export const ReservationSchema = z.object({
   id: z.number(),
-  nombre: z.string(),
-  fecha: z.string(),
-  estado: z.string(),
-  descripcion: z.string(),
+  name: z.string(),
+  startDate: z.string(),
+  state: z.object(),
 });
 
 export type Reservation = z.infer<typeof ReservationSchema>;
