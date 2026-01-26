@@ -1,9 +1,8 @@
 import ReservationForm from "@/components/reservas/reservation-form";
 import { AvailableHours } from "@/components/reservas/reservation-form/schema";
+import { apiClient } from "@/lib/api";
+import { useEffect, useState } from "react";
 import type { Route } from "./+types/nueva";
-import { useEffect } from "react";
-import { getAccessToken } from "@/lib/auth";
-import { useState } from "react";
 
 export async function clientLoader() {
   return {
@@ -12,53 +11,28 @@ export async function clientLoader() {
 }
 
 export default function NuevaReserva({ loaderData }: Route.ComponentProps) {
-  const [laboratorys, setLaboratorys] = useState([]);
-  const [stateEventType, setEventType] = useState([]);
-  const [reserved, sethoursReserved] = useState([]);
+  const [laboratorys, setLaboratorys] = useState<any[]>([]);
+  const [stateEventType, setEventType] = useState<any[]>([]);
+  const [reserved, sethoursReserved] = useState<any[]>([]);
 
-  const fetchData = async (route: string, token: string) => {
+  const fetchData = async <T,>(route: string) => {
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_HOSTNAME_BACKEND}/${route}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const res = await apiClient.get(route, { throwHttpErrors: true });
+      const data = await res.json<T>();
 
-      if (!res.ok) {
-        throw new Error(`Error: ${res.status}`);
-      }
-
-      const data = await res.json();
-
-      return data;
-    } catch (error) {
-      console.error("Error al obtener laboratorios:", error);
-      throw error;
+      return { data };
+    } catch (error: any) {
+      return { error: error as Error };
     }
   };
 
   useEffect(() => {
     const initReservation = async () => {
       try {
-        const token = await getAccessToken();
         const [resLabs, resTypes, resReserved] = await Promise.all([
-          fetchData("api/laboratories", token as string).catch((e) => ({
-            error: "labs",
-            msg: e,
-          })),
-          fetchData("api/reserve-types", token as string).catch((e) => ({
-            error: "types",
-            msg: e,
-          })),
-          fetchData("api/reservations", token as string).catch((e) => ({
-            error: "resv",
-            msg: e,
-          })),
+          fetchData<any[]>("laboratories"),
+          fetchData<any[]>("reserve-types"),
+          fetchData<any[]>("reservations"),
         ]);
 
         if (resLabs.error || resTypes.error || resReserved.error) {
@@ -70,10 +44,10 @@ export default function NuevaReserva({ loaderData }: Route.ComponentProps) {
           return;
         }
 
-        setLaboratorys(resLabs);
-        setEventType(resTypes);
+        setLaboratorys(resLabs.data);
+        setEventType(resTypes.data);
         sethoursReserved(
-          resReserved.map((reser: any) => ({
+          resReserved.data.map((reser: any) => ({
             startDate: reser.startDate,
             defaultStartTime: reser.defaultStartTime,
           })),

@@ -1,18 +1,8 @@
-import { getAccessToken } from "@/lib/auth";
+import { apiClient } from "@/lib/api";
 
 async function postReservation(value: any) {
-  const token = await getAccessToken();
-  const API_URL = import.meta.env.VITE_HOSTNAME_BACKEND;
-
   try {
-    const res = await fetch(`${API_URL}/api/reservations`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(value),
-    });
+    const res = await apiClient.post("reservations", { json: value });
 
     return res;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
