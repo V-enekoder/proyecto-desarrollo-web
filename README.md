@@ -1,106 +1,149 @@
-# Sistema de Gestión de Horarios de Laboratorios - Villa Asia
+. # Sistema de Gestión de Horarios de Laboratorios — Villa Asia
 
-Este proyecto es un sistema web full-stack diseñado para administrar y gestionar eficientemente los horarios de los laboratorios en la sede de Villa Asia. La aplicación permite a estudiantes y profesores consultar y reservar espacios de laboratorio de manera organizada.
+**Descripción corta:**
+Sistema web full‑stack para consultar y reservar espacios de laboratorio en la sede Villa Asia. Frontend en **React + TypeScript** y backend en **NestJS + TypeORM** con PostgreSQL.
 
-## ✨ Características Principales
+---
 
-El sistema cuenta con una serie de funcionalidades orientadas a facilitar la gestión de los laboratorios:
+## 🚀 Rápido inicio
 
-- **Autenticación de Usuarios:**
-  - Registro e inicio de sesión seguros para estudiantes y docentes.
-  - Hashing de contraseñas utilizando **Argon2** para máxima seguridad.
-  - Implementación de **JSON Web Tokens (JWT)** con mecanismo de refresco para mantener la sesión activa de forma segura.
-  - Funcionalidad completa de cierre de sesión.
-- **Gestión de Horarios:**
-  - Visualización de la disponibilidad de los laboratorios en una interfaz clara e intuitiva.
-  - Creación, modificación y eliminación de reservas de horarios (CRUD).
-  - Sistema de roles y permisos para diferenciar acciones entre administradores, profesores y estudiantes.
-- **Interfaz Moderna:**
-  - Frontend desarrollado con **React** y **TypeScript** para una experiencia de usuario dinámica y robusta.
-  - Diseño responsive adaptable a diferentes dispositivos.
+### Requisitos
 
-## 🛠️ Tech Stack
+- Node.js >= 22
+- pnpm
+- PostgreSQL (u otro proveedor compatible con la URL de conexión)
 
-Este proyecto es un monorepo gestionado con **pnpm workspaces** y está construido con las siguientes tecnologías:
+### Instalación
 
-- **Frontend:** React, TypeScript.
-- **Backend:** Node.js, Express (o similar), TypeScript.
-- **Base de Datos:** (Especificar la base de datos, ej: PostgreSQL, MongoDB).
-- **Autenticación:** JWT, Argon2.
-- **Herramientas de Desarrollo:** ESLint, Prettier, PNPM.
-
-## 📁 Estructura del Proyecto
-
-El repositorio está organizado en un monorepo para facilitar el desarrollo y la escalabilidad:
-
-```
-├── .vscode/              # Configuración de VSCode
-├── backend/              # Contiene toda la lógica del servidor y la API
-├── frontend/             # Contiene la aplicación cliente desarrollada en React
-├── packages/
-│   └── common/           # Código compartido (tipos, interfaces, etc.)
-├── .gitignore            # Archivos ignorados por Git
-├── .prettierrc           # Reglas de formato de código
-├── eslint.config.js      # Configuración de ESLint
-├── package.json          # Dependencias y scripts del proyecto raíz
-├── pnpm-lock.yaml        # Lockfile de dependencias de PNPM
-└── pnpm-workspace.yaml   # Definición del workspace de PNPM
+```bash
+git clone https://github.com/<TU-USUARIO>/proyecto-desarrollo-web.git
+cd proyecto-desarrollo-web
+pnpm install
 ```
 
-## 🚀 Cómo Empezar
+### Variables de entorno
 
-Sigue estos pasos para configurar y ejecutar el proyecto en tu entorno local.
+Copia y completa el ejemplo de variables del backend:
 
-### **Prerrequisitos**
+```bash
+cp backend/.env.example backend/.env
+```
 
-- Node.js (v18 o superior)
-- pnpm (v8 o superior)
+Variables importantes:
 
-### **Instalación**
+- `DATABASE_URL` — URL de conexión a PostgreSQL
+- `ACCESS_TOKEN_SECRET` — secreto para firmar JWT
 
-1.  **Haz un Fork del repositorio:**
-    Primero, haz un fork del repositorio original `https://github.com/davbrito/proyecto-desarrollo-web` a tu propia cuenta de GitHub.
+---
 
-2.  **Clona tu fork:**
-    Ahora, clona el repositorio desde tu cuenta. Reemplaza `<TU-USUARIO-DE-GITHUB>` con tu nombre de usuario.
+## 🧩 Estructura y stack
 
-    ```bash
-    git clone https://github.com/<TU-USUARIO-DE-GITHUB>/proyecto-desarrollo-web.git
-    cd proyecto-desarrollo-web
-    ```
+- Monorepo con **pnpm workspaces**
+- Frontend: React 19, TypeScript, React Router, Vite, Tailwind
+- Backend: NestJS, TypeORM, PostgreSQL, JWT, Argon2
+- Tests: Vitest (frontend), Jest (backend)
 
-3.  **Instala las dependencias:**
-    Desde la raíz del proyecto, pnpm instalará las dependencias de todos los workspaces.
+---
 
-    ```bash
-    pnpm install
-    ```
+## 🛠️ Desarrollo
 
-4.  **Configura las variables de entorno:**
-    En el directorio `backend`, renombra el archivo `.env.example` a `.env` y completa las variables requeridas (credenciales de la base de datos, secretos de JWT, etc.).
-    ```bash
-    cp backend/.env.example backend/.env
-    ```
+Ejecuta en terminales separados:
 
-### **Ejecución**
+- Frontend (dev):
 
-Puedes ejecutar el frontend y el backend simultáneamente desde la raíz del proyecto.
+```bash
+pnpm dev:frontend
+# o
+pnpm --filter frontend dev
+```
 
-1.  **Iniciar el entorno de desarrollo:**
+- Backend (dev - NestJS):
 
-    ```bash
-    pnpm dev
-    ```
+```bash
+pnpm dev:backend
+# o
+pnpm --filter backend start:dev
+```
 
-2.  **Abrir la aplicación:**
-    - El frontend estará disponible en `http://localhost:5173`.
-    - El servidor backend se ejecutará en `http://localhost:3000`.
+- URLs por defecto:
+  - Frontend: `http://localhost:5173`
+  - Backend: `http://localhost:3000`
 
-## 📜 Scripts Disponibles
+---
 
-Estos son algunos de los scripts principales que puedes ejecutar desde la raíz del proyecto:
+## 🗄️ Migraciones y seed
 
-- `pnpm dev`: Inicia el frontend y el backend en modo de desarrollo.
-- `pnpm build`: Compila las aplicaciones de frontend y backend para producción.
-- `pnpm lint`: Ejecuta ESLint para analizar el código en busca de errores.
-- `pnpm format`: Formatea todo el código del proyecto utilizando Prettier.
+- Ejecutar migraciones:
+
+```bash
+pnpm --filter backend migration:run
+```
+
+- Generar migración:
+
+```bash
+pnpm --filter backend migration:generate -- <nombre>
+```
+
+- Revertir migración:
+
+```bash
+pnpm --filter backend migration:revert
+```
+
+- Cargar datos de prueba (seed):
+
+```bash
+pnpm --filter backend seed
+```
+
+> Asegúrate de tener `DATABASE_URL` configurada en `backend/.env` antes de ejecutar migraciones o el seed.
+
+---
+
+## ✅ Tests, lint y build
+
+- Backend:
+
+```bash
+pnpm --filter backend test
+pnpm --filter backend test:e2e
+```
+
+- Frontend:
+
+```bash
+pnpm --filter frontend test
+```
+
+- Lint & format:
+
+```bash
+pnpm --filter backend lint
+pnpm --filter frontend lint
+pnpm --filter backend format
+```
+
+- Build producción:
+
+```bash
+pnpm --filter frontend build
+pnpm --filter backend build
+```
+
+---
+
+## ☁️ Despliegue
+
+Incluye configuraciones para **Vercel**. Ajusta variables de entorno (DATABASE_URL, ACCESS_TOKEN_SECRET, etc.) en la plataforma de despliegue.
+
+---
+
+## 🤝 Contribuir
+
+- Abre un issue para discutir cambios grandes.
+- Envía PRs pequeñas y revisables; incluye pruebas cuando sea posible.
+
+## 📄 Licencia
+
+**MIT**

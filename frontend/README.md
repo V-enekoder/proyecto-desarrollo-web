@@ -1,75 +1,68 @@
-# React + TypeScript + Vite
+# Frontend — Aplicación cliente (React + TypeScript) ✅
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interfaz de usuario del sistema de reservas. Implementada con React 19, Vite y Tailwind CSS.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Requisitos
+- Node.js >= 22
+- pnpm
 
-## React Compiler
+---
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+## Instalación
+Desde la raíz del monorepo:
 
-Note: This will impact Vite dev & build performances.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```bash
+pnpm install
+# o solo en frontend
+pnpm --filter frontend install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
-
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+## Scripts útiles
+- Desarrollo (HMR):
+```bash
+pnpm --filter frontend dev
+# o desde raíz
+pnpm dev:frontend
 ```
+- Compilar producción:
+```bash
+pnpm --filter frontend build
+```
+- Previsualizar build:
+```bash
+pnpm --filter frontend preview
+```
+- Generar tipos y comprobar:
+```bash
+pnpm --filter frontend typecheck
+```
+- Lint:
+```bash
+pnpm --filter frontend lint
+```
+- Tests (Vitest):
+```bash
+pnpm --filter frontend test
+pnpm --filter frontend test:run
+pnpm --filter frontend test:coverage
+```
+
+---
+
+## Testing
+Se usan `vitest` y `@testing-library/react`. Ejecuta `pnpm --filter frontend test` para tests en modo watch o `pnpm --filter frontend test:run` para ejecución única.
+
+---
+
+## Despliegue
+Se incluye configuración para desplegar en **Vercel**. Asegúrate de configurar las variables de entorno en la plataforma (ej. `VITE_HOSTNAME_BACKEND`).
+
+---
+
+## Contribuciones
+- Escribe tests para nuevas funcionalidades.
+- Respeta las reglas de lint y formato antes de enviar PRs.
