@@ -15,7 +15,12 @@ import {
 import { useUser } from "@/lib/auth";
 import { getInitials } from "@/lib/utils";
 import { reservationsService } from "@/services/reservations";
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { RoleEnum } from "@uneg-lab/api-types/auth";
 import { ReservationTypeNames } from "@uneg-lab/api-types/reservation";
@@ -119,56 +124,58 @@ export function ReservationsTable() {
 
         <div className="flex items-center gap-2">
           {/* Menú Tipo de Actividad */}
-          <Menu as="div" className="relative inline-block text-left">
-            <MenuButton className="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-600 shadow-xs hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300">
-              Actividad: {typeActivity || "Todas"}
-              <ChevronRight className="size-4 rotate-90 text-gray-400" />
-            </MenuButton>
-            <MenuItems className="absolute right-0 z-10 mt-2 w-44 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-gray-800">
-              <div className="py-1">
-                {["", "CLASE", "EVENTO", "MANTENIMIENTO"].map((type) => (
-                  <MenuItem key={type}>
-                    <button
-                      onClick={() => {
-                        setTypeActivity(type as any);
-                        setPage(1);
-                      }}
-                      className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10"
-                    >
-                      {type || "Todas"}
-                    </button>
-                  </MenuItem>
-                ))}
-              </div>
-            </MenuItems>
-          </Menu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="secondary"
+                className="bg-gray-100 text-gray-600 shadow-xs hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
+              >
+                Actividad: {typeActivity || "Todas"}
+                <ChevronRight className="size-4 rotate-90 text-gray-400" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              {["", "CLASE", "EVENTO", "MANTENIMIENTO"].map((type) => (
+                <DropdownMenuItem
+                  key={type}
+                  onClick={() => {
+                    setTypeActivity(type as any);
+                    setPage(1);
+                  }}
+                >
+                  {type || "Todas"}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Menú Estado de Reserva */}
-          <Menu as="div" className="relative inline-block text-left">
-            <MenuButton className="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-600 shadow-xs hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300">
-              Estado: {statusFilter || "Todos"}
-              <Filter className="size-4 text-gray-400" />
-            </MenuButton>
-            <MenuItems className="absolute right-0 z-10 mt-2 w-44 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-gray-800">
-              <div className="py-1">
-                {["", "PENDIENTE", "APROBADO", "RECHAZADO", "CANCELADO"].map(
-                  (status) => (
-                    <MenuItem key={status}>
-                      <button
-                        onClick={() => {
-                          setStatusFilter(status);
-                          setPage(1);
-                        }}
-                        className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10"
-                      >
-                        {status || "Todos"}
-                      </button>
-                    </MenuItem>
-                  ),
-                )}
-              </div>
-            </MenuItems>
-          </Menu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="secondary"
+                className="bg-gray-100 text-gray-600 shadow-xs hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
+              >
+                Estado: {statusFilter || "Todos"}
+                <Filter className="size-4 text-gray-400" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              {["", "PENDIENTE", "APROBADO", "RECHAZADO", "CANCELADO"].map(
+                (status) => (
+                  <DropdownMenuItem
+                    key={status}
+                    onClick={() => {
+                      setStatusFilter(status);
+                      setPage(1);
+                    }}
+                  >
+                    {status || "Todos"}
+                  </DropdownMenuItem>
+                ),
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
