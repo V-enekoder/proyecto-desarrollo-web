@@ -1,8 +1,6 @@
 import { registerAs } from "@nestjs/config";
 import { TypeOrmModuleOptions } from "@nestjs/typeorm";
 
-const __dirname = import.meta.dirname;
-
 export const databaseConfig = registerAs(
   "database",
   () =>
