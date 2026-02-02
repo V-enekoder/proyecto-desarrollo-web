@@ -1,7 +1,7 @@
 import { RoleEnum } from "@uneg-lab/api-types/auth";
 import * as argon2 from "argon2";
 import { Exclude } from "class-transformer";
-import { nanoid } from "nanoid";
+import { nanoid } from "nanoid-cjs";
 import {
   BeforeInsert,
   Column,
