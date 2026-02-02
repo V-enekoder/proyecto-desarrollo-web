@@ -16,6 +16,8 @@ import {
 } from "nestjs-paginate";
 import { PermissionEnum } from "../auth/auth.permissions.js";
 import { Auth } from "../auth/decorators/auth.decorator.js";
+import { CurrentUser } from "../auth/decorators/current-user.decorator.js";
+import { RequirePermissions } from "../auth/decorators/permissions.decorator.js";
 import { StatsDto } from "./dto/stats.dto.js";
 import { Reservation } from "./entities/reservation.entity.js";
 import {
@@ -26,7 +28,6 @@ import {
   RESERVATION_PAGINATION_CONFIG,
   ReservationsService,
 } from "./reservations.service.js";
-import { RequirePermissions } from "../auth/decorators/permissions.decorator.js";
 
 @Auth()
 @Controller("reservations")
@@ -35,28 +36,34 @@ export class ReservationsController {
 
   @RequirePermissions(PermissionEnum.CREATE_RESERVATIONS)
   @Post()
-  create(@Body() createReservationDto: CreateReservationDto) {
-    return this.reservationsService.create(createReservationDto);
+  create(
+    @Body() createReservationDto: CreateReservationDto,
+    @CurrentUser() user: Express.User,
+  ) {
+    return this.reservationsService.create(createReservationDto, user);
   }
 
   @RequirePermissions(PermissionEnum.READ_RESERVATIONS)
   @Get()
   @PaginatedSwaggerDocs(Reservation, RESERVATION_PAGINATION_CONFIG)
-  search(@Paginate() query: PaginateQuery) {
-    return this.reservationsService.search(query);
+  search(@Paginate() query: PaginateQuery, @CurrentUser() user: Express.User) {
+    return this.reservationsService.search(query, user);
   }
 
   @RequirePermissions(PermissionEnum.READ_RESERVATIONS)
   @Get("stats")
   @ApiOkResponse({ type: StatsDto })
-  getStats(): Promise<StatsDto> {
-    return this.reservationsService.getStats();
+  getStats(@CurrentUser() user: Express.User): Promise<StatsDto> {
+    return this.reservationsService.getStats(user);
   }
 
   @RequirePermissions(PermissionEnum.READ_RESERVATIONS)
   @Get(":id")
-  findOne(@Param("id", ParseIntPipe) id: number) {
-    return this.reservationsService.findOne(id);
+  findOne(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: Express.User,
+  ) {
+    return this.reservationsService.findOne(id, user);
   }
 
   @RequirePermissions(PermissionEnum.UPDATE_RESERVATIONS)
@@ -64,8 +71,9 @@ export class ReservationsController {
   update(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateReservationDto: UpdateReservationDto,
+    @CurrentUser() user: Express.User,
   ) {
-    return this.reservationsService.update(id, updateReservationDto);
+    return this.reservationsService.update(id, updateReservationDto, user);
   }
 
   @RequirePermissions(PermissionEnum.MANAGE_RESERVATIONS_STATE)
@@ -73,13 +81,17 @@ export class ReservationsController {
   updateState(
     @Param("id", ParseIntPipe) id: number,
     @Body("stateId", ParseIntPipe) stateId: number,
+    @CurrentUser() user: Express.User,
   ) {
-    return this.reservationsService.updateState(id, stateId);
+    return this.reservationsService.updateState(id, stateId, user);
   }
 
   @RequirePermissions(PermissionEnum.DELETE_RESERVATIONS)
   @Delete(":id")
-  remove(@Param("id", ParseIntPipe) id: number) {
-    return this.reservationsService.remove(id);
+  remove(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: Express.User,
+  ) {
+    return this.reservationsService.remove(id, user);
   }
 }

@@ -53,4 +53,8 @@ export const reservationsService = {
       .json()
       .then(ReservationSchema.parse);
   },
+
+  create: async (payload: any) => {
+    return apiClient.post("reservations", { json: payload });
+  },
 };
