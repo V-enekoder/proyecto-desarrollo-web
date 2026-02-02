@@ -10,7 +10,7 @@ import { createRoutesStub } from "react-router";
 import LoginRoute from "./login";
 import { login } from "@/lib/auth";
 
-describe("LoginRoute", () => {
+describe("Ruta de Login", () => {
   const Stub = createRoutesStub([
     { path: "/login", Component: LoginRoute },
     { path: "/", Component: () => <div>Home Page</div> },
@@ -20,7 +20,7 @@ describe("LoginRoute", () => {
     vi.clearAllMocks();
   });
 
-  it("verifica inicio de sesión exitoso con credenciales válidas", async () => {
+  it("TC-FE-AUTH-001: debe iniciar sesión con credenciales válidas", async () => {
     const user = userEvent.setup();
     vi.mocked(login).mockResolvedValue({} as any);
 

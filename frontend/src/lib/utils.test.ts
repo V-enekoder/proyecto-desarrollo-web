@@ -3,19 +3,19 @@ import { getInitials } from "./utils";
 
 describe("utils", () => {
   describe("getInitials", () => {
-    it("should return initials for a name", () => {
+    it("TC-FE-UTIL-001: debe devolver las iniciales para un nombre", () => {
       expect(getInitials("John Doe")).toBe("JD");
     });
 
-    it("should return initials for a single name", () => {
+    it("TC-FE-UTIL-002: debe devolver la inicial para un solo nombre", () => {
       expect(getInitials("John")).toBe("J");
     });
 
-    it("should return at most 2 initials", () => {
+    it("TC-FE-UTIL-003: debe devolver como máximo 2 iniciales", () => {
       expect(getInitials("John Doe Smith")).toBe("JD");
     });
 
-    it("should return empty string for empty input", () => {
+    it("TC-FE-UTIL-004: debe devolver cadena vacía si la entrada está vacía", () => {
       expect(getInitials("")).toBe("");
     });
   });

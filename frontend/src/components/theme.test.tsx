@@ -44,7 +44,7 @@ vi.mock("react-router", () => ({
   Link: ({ children }: any) => <a>{children}</a>,
 }));
 
-describe("Dark Mode Toggle in PrivateLayout", () => {
+describe("Alternancia de tema en PrivateLayout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (useUser as any).mockReturnValue({ user: { name: "Test User" } });
@@ -54,7 +54,7 @@ describe("Dark Mode Toggle in PrivateLayout", () => {
     document.documentElement.style.colorScheme = "";
   });
 
-  it("toggles theme when clicking the button", async () => {
+  it("TC-FE-THEME-001: debe alternar el tema al hacer clic en el botón", async () => {
     render(
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
         <PrivateLayout sections={[]}>

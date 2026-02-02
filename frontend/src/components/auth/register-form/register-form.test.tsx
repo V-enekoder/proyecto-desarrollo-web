@@ -11,7 +11,7 @@ import { createRoutesStub } from "react-router";
 import RegisterForm from "./index";
 import * as auth from "@/lib/auth";
 
-describe("RegisterForm Component", () => {
+describe("Componente RegisterForm", () => {
   const defaultProps = {
     title: "Crear Cuenta",
     subtitle: "Regístrate para continuar",
@@ -35,7 +35,7 @@ describe("RegisterForm Component", () => {
     vi.clearAllMocks();
   });
 
-  it("renders the register form with correctly", () => {
+  it("TC-FE-REG-001: debe renderizar el formulario de registro correctamente", () => {
     render(<Stub initialEntries={["/register"]} />);
 
     expect(screen.getByText("Crear Cuenta")).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe("RegisterForm Component", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows validation errors when submitting empty form", async () => {
+  it("TC-FE-REG-002: debe mostrar errores de validación al enviar formulario vacío", async () => {
     const user = userEvent.setup();
     render(<Stub initialEntries={["/register"]} />);
 
@@ -61,7 +61,7 @@ describe("RegisterForm Component", () => {
     });
   });
 
-  it("calls register service and navigates on success", async () => {
+  it("TC-FE-REG-003: debe llamar a register y navegar en éxito", async () => {
     const user = userEvent.setup();
     vi.mocked(auth.register).mockResolvedValue({} as any);
 

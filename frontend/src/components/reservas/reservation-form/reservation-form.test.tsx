@@ -45,7 +45,7 @@ const createTestQueryClient = () =>
     },
   });
 
-describe("ReservationForm Component", () => {
+describe("Componente ReservationForm", () => {
   const defaultProps = {
     reserved: [],
     availableHours: ["08:00", "09:00", "10:00", "11:00", "12:00"],
@@ -84,7 +84,7 @@ describe("ReservationForm Component", () => {
     vi.clearAllMocks();
   });
 
-  it("renders correctly and enables second step after filling first step", async () => {
+  it("TC-FE-RES-001: debe renderizar y habilitar el segundo paso tras completar el primero", async () => {
     const user = userEvent.setup();
     render(<Stub initialEntries={["/reservar"]} />);
 
@@ -129,7 +129,7 @@ describe("ReservationForm Component", () => {
     });
   });
 
-  it("submits the form successfully", async () => {
+  it("TC-FE-RES-002: debe enviar el formulario correctamente", async () => {
     const user = userEvent.setup();
     vi.mocked(reservationsService.create).mockResolvedValue({} as any);
 
@@ -185,7 +185,7 @@ describe("ReservationForm Component", () => {
     expect(await screen.findByText(/Reservations List/i)).toBeInTheDocument();
   });
 
-  it("shows validation errors if fields are missing", async () => {
+  it("TC-FE-RES-003: debe mostrar errores de validación si faltan campos", async () => {
     const user = userEvent.setup();
     render(<Stub initialEntries={["/reservar"]} />);
 
