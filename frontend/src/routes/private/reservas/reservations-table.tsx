@@ -100,7 +100,7 @@ export function ReservationsTable() {
     try {
       const token = await getAccessToken();
       const response = await fetch(
-        `http://localhost:3000/api/reservations/${id}`,
+        `${import.meta.env.VITE_HOSTNAME_BACKEND}/api/reservations/${id}`,
         {
           method: "PATCH",
           headers: {

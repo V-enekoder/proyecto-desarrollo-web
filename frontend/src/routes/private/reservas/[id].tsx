@@ -131,14 +131,17 @@ export default function ReservasPage({ params }: Route.ComponentProps) {
     }
     try {
       const token = await getAccessToken();
-      await fetch(`http://localhost:3000/api/reservations/${reservation.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      await fetch(
+        `${import.meta.env.VITE_HOSTNAME_BACKEND}/api/reservations/${reservation.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ stateId: 4 }),
         },
-        body: JSON.stringify({ stateId: 4 }),
-      });
+      );
 
       alert(`Se cancelo exitosamente`);
       queryClient.invalidateQueries({ queryKey: ["reservation"] });
