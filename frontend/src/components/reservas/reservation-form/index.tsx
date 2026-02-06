@@ -9,7 +9,7 @@ import { reservationsService } from "@/services/reservations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -49,14 +49,33 @@ export interface ModalReservasionProps {
     defaultEndTime: string;
     rrule: string;
   }[];
+  users: {
+   username: string;
+   id: string;
+  }[]
 }
 
 function ReservationForm({
+  users,
   reserved,
   availableHours,
   availableLaboratory,
   stateTypeEvent,
 }: ModalReservasionProps) {
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    const authData = localStorage.getItem("auth");
+    if (authData) {
+      try {
+        const parsedData = JSON.parse(authData);
+        setRole(parsedData.state?.user?.role);
+      } catch (error) {
+        console.error("Error al leer el rol:", error);
+      }
+    }
+  }, []);
+
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const formId = useId();
@@ -86,6 +105,7 @@ function ReservationForm({
   const { errors } = formState;
   const { errors: errorsRecurring } = formStateRecurring;
 
+  const [reservaPara, setReservaPara] = useState("mi");
   const [stepsView, setStepsView] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
   const [tipoReserva, setTipoReserva] = useState("unica");
@@ -651,6 +671,69 @@ function ReservationForm({
             <div className="flex flex-col items-stretch gap-4">
               <FieldGroup>
                 <Field>
+                  {role === "user" && (
+                    <div className="border-rounded mt-2 border-2 border-gray-200 p-2">
+                      <div className="space-y-4 pt-4">
+                        {/* 1. SECCIÓN DE RADIOS: Siempre visible para el Admin */}
+                        <div className="space-y-3">
+                          <label className="block text-[15px] font-medium text-[#1a3a5a]">
+                            ¿A quién le harás la reserva?
+                          </label>
+                          <div className="flex flex-wrap gap-8">
+                            <label className="flex cursor-pointer items-center">
+                              <input
+                                type="radio"
+                                name="reserva-tipo"
+                                value="mi"
+                                checked={reservaPara === "mi"}
+                                onChange={(e) => setReservaPara(e.target.value)}
+                                className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="ml-2 text-[15px] text-gray-700">
+                                Para mí
+                              </span>
+                            </label>
+
+                            <label className="flex cursor-pointer items-center">
+                              <input
+                                type="radio"
+                                name="reserva-tipo"
+                                value="alguien"
+                                checked={reservaPara === "alguien"}
+                                onChange={(e) => setReservaPara(e.target.value)}
+                                className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="ml-2 text-[15px] text-gray-700">
+                                Para alguien
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {reservaPara === "alguien" && (
+                          <div className="animate-fadeIn space-y-2">
+                            <FieldLabel htmlFor="profesor-select">
+                              Selecciona al profesor
+                            </FieldLabel>
+                            <Field className="w-full">
+                              <select
+                                id="profesor-select"
+                                className="w-full rounded-md border border-gray-300 p-2 text-[15px] focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                {...registerRecurring("whomYouReserved")}
+                              >
+                                <option value="">Selecciona un profesor</option>
+                                {users.map((user: any) => (
+                                  <option key={user.uuid} value={user.uud}>
+                                    {user.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </Field>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <FieldLabel htmlFor="laboratorio-selection">
                     Selecciona un laboratorio
                   </FieldLabel>
