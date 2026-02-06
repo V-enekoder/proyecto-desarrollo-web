@@ -80,6 +80,7 @@ function ReservationForm({
     register: registerRecurring,
     handleSubmit: handleSubmitRecurring,
     formState: formStateRecurring,
+    watch: watchRecurring,
   } = formRecurring;
 
   const { errors } = formState;
@@ -118,11 +119,39 @@ function ReservationForm({
     setTipoReserva(e.target.value);
   };
 
+  const selectedDay = watchRecurring("days");
+  const selectedWeek = watchRecurring("WeeksReservations");
+
+  // Filtramos las horas que NO están chocando con nada
+  const filteredHours = availableHours.filter((hour) => {
+    // Buscamos si existe alguna reserva que bloquee esta hora específica
+    const isBlocked = reserved.some((reserve) => {
+      const [partFreq, partDays] = reserve.rrule?.split(";") || [];
+      const weeksDB = partFreq?.split("=")[1];
+      const daysDB = partDays?.split("=")[1];
+
+      const isSameDay = selectedDay === daysDB;
+
+      const isSameWeek =
+        selectedWeek === weeksDB ||
+        weeksDB === "todas" ||
+        selectedWeek === "todas";
+
+      if (isSameDay && isSameWeek) {
+        const startDB = reserve.defaultStartTime.slice(0, 5);
+        const endDB = reserve.defaultEndTime.slice(0, 5);
+        return hour >= startDB && hour < endDB;
+      }
+      return false;
+    });
+
+    return !isBlocked;
+  });
+
   return (
     <div className="p-4 md:h-full md:w-auto">
       <div className="flex w-full justify-center">
         <div className="max-w-2xl bg-white p-8">
-          {/* Encabezado con el estilo de color y peso de la imagen */}
           <h2 className="mb-6 text-[26px] text-[#1a3a5a]">
             <span className="font-bold">Reserva</span>{" "}
             {tipoReserva === "unica" ? "única" : "recurrente"} de
@@ -130,7 +159,6 @@ function ReservationForm({
           </h2>
 
           <div className="flex items-center gap-8">
-            {/* Opción: Reserva única */}
             <label className="group flex cursor-pointer items-center">
               <input
                 type="radio"
@@ -145,7 +173,6 @@ function ReservationForm({
               </span>
             </label>
 
-            {/* Opción: Reserva recurrente */}
             <label className="group flex cursor-pointer items-center">
               <input
                 type="radio"
@@ -683,7 +710,7 @@ function ReservationForm({
                   />
                   <FieldError>{errorsRecurring.start_time?.message}</FieldError>
                   <datalist id="horas-disponibles">
-                    {availableHours.map((hour) => (
+                    {filteredHours.map((hour) => (
                       <option key={hour} value={hour}>
                         {hour}
                       </option>
@@ -702,7 +729,7 @@ function ReservationForm({
                   />
                   <FieldError>{errorsRecurring.end_time?.message}</FieldError>
                   <datalist id="horas-disponibles">
-                    {availableHours.map((hour) => (
+                    {filteredHours.map((hour) => (
                       <option key={hour} value={hour}>
                         {hour}
                       </option>
