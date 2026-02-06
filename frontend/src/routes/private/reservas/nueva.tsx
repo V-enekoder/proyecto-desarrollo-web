@@ -52,7 +52,7 @@ export default function NuevaReserva({ loaderData }: Route.ComponentProps) {
 
         setUsers(
           user.data!.map((reser: any) => ({
-            uuid: reser.uuid,
+            id: reser.id,
             username: reser.username,
           })),
         );

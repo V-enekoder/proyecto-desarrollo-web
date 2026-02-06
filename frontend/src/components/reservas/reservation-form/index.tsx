@@ -50,9 +50,9 @@ export interface ModalReservasionProps {
     rrule: string;
   }[];
   users: {
-   username: string;
-   id: string;
-  }[]
+    username: string;
+    id: string;
+  }[];
 }
 
 function ReservationForm({
@@ -142,9 +142,7 @@ function ReservationForm({
   const selectedDay = watchRecurring("days");
   const selectedWeek = watchRecurring("WeeksReservations");
 
-  // Filtramos las horas que NO están chocando con nada
   const filteredHours = availableHours.filter((hour) => {
-    // Buscamos si existe alguna reserva que bloquee esta hora específica
     const isBlocked = reserved.some((reserve) => {
       const [partFreq, partDays] = reserve.rrule?.split(";") || [];
       const weeksDB = partFreq?.split("=")[1];
@@ -537,7 +535,7 @@ function ReservationForm({
             }
 
             try {
-              const sendData = {
+              const sendData: any = {
                 name: data.description,
                 startDate: data.date.toISOString().split("T")[0],
                 endDate: data.dateFinally.toISOString().split("T")[0],
@@ -548,6 +546,10 @@ function ReservationForm({
                 stateId: ReservationStateEnum.PENDIENTE,
                 typeId: Number(data.type_event),
               };
+
+              if (reservaPara === "alguien" && data.whomYouReserved) {
+                sendData.userId = data.whomYouReserved;
+              }
 
               await reservationsService.create(sendData);
 
@@ -671,10 +673,9 @@ function ReservationForm({
             <div className="flex flex-col items-stretch gap-4">
               <FieldGroup>
                 <Field>
-                  {role === "user" && (
+                  {role === "admin" && (
                     <div className="border-rounded mt-2 border-2 border-gray-200 p-2">
                       <div className="space-y-4 pt-4">
-                        {/* 1. SECCIÓN DE RADIOS: Siempre visible para el Admin */}
                         <div className="space-y-3">
                           <label className="block text-[15px] font-medium text-[#1a3a5a]">
                             ¿A quién le harás la reserva?
@@ -718,13 +719,17 @@ function ReservationForm({
                             <Field className="w-full">
                               <select
                                 id="profesor-select"
-                                className="w-full rounded-md border border-gray-300 p-2 text-[15px] focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                className="w-full rounded-md border border-gray-300 p-2 text-black"
                                 {...registerRecurring("whomYouReserved")}
                               >
                                 <option value="">Selecciona un profesor</option>
                                 {users.map((user: any) => (
-                                  <option key={user.uuid} value={user.uud}>
-                                    {user.name}
+                                  <option
+                                    key={user.id}
+                                    value={user.id}
+                                    className="text-black"
+                                  >
+                                    {user.username}
                                   </option>
                                 ))}
                               </select>
