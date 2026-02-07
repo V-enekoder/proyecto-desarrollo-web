@@ -177,10 +177,10 @@ function ReservationForm({
   });
 
   return (
-    <div className="p-4 md:h-full md:w-auto">
+    <div className="overflow-auto p-4 md:h-full md:w-auto">
       <div className="flex w-full justify-center">
-        <div className="max-w-2xl bg-white p-8">
-          <h2 className="mb-6 text-[26px] text-[#1a3a5a]">
+        <div className="max-w-2xl p-8">
+          <h2 className="mb-6 text-[26px] not-dark:text-[#1a3a5a]">
             <span className="font-bold">Reserva</span>{" "}
             {tipoReserva === "unica" ? "única" : "recurrente"} de
             Laboratorio{" "}
@@ -193,22 +193,16 @@ function ReservationForm({
           >
             <div className="flex items-center gap-2">
               <RadioGroupItem id="tipo-reserva-unica" value="unica" />
-              <label
-                htmlFor="tipo-reserva-unica"
-                className="text-sm text-gray-700 md:text-base"
-              >
+              <Label htmlFor="tipo-reserva-unica" className="md:text-base">
                 Reserva única
-              </label>
+              </Label>
             </div>
 
             <div className="flex items-center gap-2">
               <RadioGroupItem id="tipo-reserva-recurrente" value="recurrente" />
-              <label
-                htmlFor="tipo-reserva-recurrente"
-                className="text-sm text-gray-700 md:text-base"
-              >
+              <Label htmlFor="tipo-reserva-recurrente" className="md:text-base">
                 Reserva recurrente (semestre)
-              </label>
+              </Label>
             </div>
           </RadioGroup>
         </div>
@@ -256,7 +250,6 @@ function ReservationForm({
               toast.error("Error al crear la reservación");
               setErrorFromServer(setError, error);
               console.log(error);
-              return;
             } finally {
               setLoad(false);
             }
@@ -518,7 +511,7 @@ function ReservationForm({
                   </Button>
                 ) : (
                   <Button type="submit" disabled={load || sendSuccess}>
-                    {load ? "cargando" : "confirmar"}
+                    {load ? "Cargando" : "Confirmar"}
                   </Button>
                 )}
               </Field>
@@ -587,14 +580,13 @@ function ReservationForm({
               queryClient.invalidateQueries({ queryKey: ["dashboard"] });
 
               setSendSuccess(true);
+              navigate("/reservas");
             } catch (error) {
               toast.error("Error al crear la reservación");
               setErrorFromServer(setError, error);
               console.log(error);
-              return;
             } finally {
               setLoad(false);
-              navigate("/reservas");
             }
           })}
         >
@@ -944,7 +936,7 @@ function ReservationForm({
                   </Button>
 
                   <Button disabled={load} type="submit">
-                    {load ? "cargando" : "confirmar"}
+                    {load ? "Cargando" : "Confirmar"}
                   </Button>
                 </Field>
               </div>
