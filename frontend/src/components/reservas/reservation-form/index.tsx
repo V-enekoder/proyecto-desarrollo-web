@@ -14,7 +14,7 @@ import {
   ReservationStateEnum,
   TypeReservation,
 } from "@uneg-lab/api-types/reservation";
-import { formatDate } from "date-fns";
+import { addYears, formatDate } from "date-fns";
 import { useId, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
@@ -28,6 +28,7 @@ import {
   reservationFormSchemaRecurring,
   type ReservationFormRecurringValues,
 } from "./schemaReservationRecurring";
+import RecurringCalendarPreview from "./recurring-calendar-preview";
 
 export interface ModalReservasionProps {
   availableHours: string[];
@@ -89,7 +90,7 @@ function ReservationForm({
     register: registerRecurring,
     handleSubmit: handleSubmitRecurring,
     formState: formStateRecurring,
-    watch: watchRecurring,
+    control: controlRecurring,
   } = formRecurring;
 
   const { errors } = formState;
@@ -107,6 +108,8 @@ function ReservationForm({
   ];
   const [diaSeleccionado, setDiaSeleccionado] = useState("Lunes");
   const dateValue = useWatch({ control, name: "date" });
+  const todayDate = formatDate(new Date(), "yyyy-MM-dd");
+  const maxDate = formatDate(addYears(new Date(), 1), "yyyy-MM-dd");
 
   const handleNextStep = async () => {
     const fieldsStep1: any[] = [
@@ -129,8 +132,19 @@ function ReservationForm({
     setTipoReserva(e.target.value);
   };
 
-  const selectedDay = watchRecurring("days");
-  const selectedWeek = watchRecurring("WeeksReservations");
+  const selectedDay = useWatch({ control: controlRecurring, name: "days" });
+  const selectedWeek = useWatch({
+    control: controlRecurring,
+    name: "WeeksReservations",
+  });
+  const startDateRecurring = useWatch({
+    control: controlRecurring,
+    name: "date",
+  });
+  const endDateRecurring = useWatch({
+    control: controlRecurring,
+    name: "dateFinally",
+  });
 
   const filteredHours = availableHours.filter((hour) => {
     const isBlocked = reserved.some((reserve) => {
@@ -558,292 +572,343 @@ function ReservationForm({
             }
           })}
         >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr]">
-            <div className="flex flex-col gap-2">
-              <FieldLabel>Periodo del semestre</FieldLabel>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]">
+            <div className="space-y-6">
+              <div className="flex flex-col gap-2">
+                <FieldLabel>Periodo del semestre</FieldLabel>
 
-              <div className="animate-fadeIn flex w-full flex-wrap gap-6">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-3">
-                    <label className="text-[15px] text-[#1a3a5a]">
-                      Inicio del semestre:
-                    </label>
-                    <input
-                      type="date"
-                      {...registerRecurring("date")}
-                      className="rounded-[4px] border border-[#d1d5db] px-3 py-1.5 text-[#1a3a5a] transition-colors focus:border-blue-500 focus:outline-none"
-                    />
+                <div className="animate-fadeIn flex w-full flex-wrap gap-6">
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-3">
+                      <label className="text-[15px] text-[#1a3a5a]">
+                        Inicio del semestre:
+                      </label>
+                      <input
+                        type="date"
+                        {...registerRecurring("date")}
+                        min={todayDate}
+                        max={
+                          endDateRecurring
+                            ? formatDate(endDateRecurring, "yyyy-MM-dd")
+                            : maxDate
+                        }
+                        className="rounded-lg border border-[#d1d5db] px-3 py-1.5 text-[#1a3a5a] transition-colors focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    <FieldError>{errorsRecurring.date?.message}</FieldError>
                   </div>
-                  <FieldError>{errorsRecurring.date?.message}</FieldError>
-                </div>
 
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-3">
-                    <label className="text-[15px] text-[#1a3a5a]">
-                      Fin del semestre:
-                    </label>
-                    <input
-                      type="date"
-                      {...registerRecurring("dateFinally")}
-                      className="rounded-[4px] border border-[#d1d5db] px-3 py-1.5 text-[#1a3a5a] transition-colors focus:border-blue-500 focus:outline-none"
-                    />
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-3">
+                      <label className="text-[15px] text-[#1a3a5a]">
+                        Fin del semestre:
+                      </label>
+                      <input
+                        type="date"
+                        {...registerRecurring("dateFinally")}
+                        min={
+                          startDateRecurring
+                            ? formatDate(startDateRecurring, "yyyy-MM-dd")
+                            : todayDate
+                        }
+                        max={maxDate}
+                        className="rounded-lg border border-[#d1d5db] px-3 py-1.5 text-[#1a3a5a] transition-colors focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    <FieldError>
+                      {errorsRecurring.dateFinally?.message}
+                    </FieldError>
                   </div>
-                  <FieldError>
-                    {errorsRecurring.dateFinally?.message}
-                  </FieldError>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-3">
-              <label className="block text-[15px]">Días de la semana:</label>
-              <div className="flex flex-wrap gap-6">
-                {dias.map((dia) => (
-                  <label
-                    key={dia}
-                    className="group flex cursor-pointer items-center"
-                  >
-                    <div className="relative flex items-center">
+              <div className="space-y-3">
+                <label className="block text-[15px]">Días de la semana:</label>
+                <div className="flex flex-wrap gap-6">
+                  {dias.map((dia) => (
+                    <label
+                      key={dia}
+                      className="group flex cursor-pointer items-center"
+                    >
+                      <div className="relative flex items-center">
+                        <input
+                          type="radio"
+                          {...registerRecurring("days")}
+                          value={dia}
+                          checked={diaSeleccionado === dia}
+                          onChange={() => setDiaSeleccionado(dia)}
+                          className="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform text-white opacity-0 peer-checked:opacity-100">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-3.5 w-3.5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </span>
+                      </div>
+                      <span className="ml-2 text-[15px] text-[#1a3a5a]">
+                        {dia}
+                      </span>
+
+                      <FieldError>{errorsRecurring.days?.message}</FieldError>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-[13px] text-gray-600">
+                  Seleccionado: {selectedDay ? selectedDay : "(sin día)"}
+                </p>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <label className="block text-[15px]">Aplicar en:</label>
+                <div className="flex flex-wrap gap-8">
+                  {weeks.map((week) => (
+                    <label
+                      key={week.type}
+                      className="flex cursor-pointer items-center"
+                    >
                       <input
                         type="radio"
-                        {...registerRecurring("days")}
-                        value={dia}
-                        checked={diaSeleccionado === dia}
-                        onChange={() => setDiaSeleccionado(dia)}
-                        className="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-500"
+                        value={week.type}
+                        {...registerRecurring("WeeksReservations")}
+                        className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform text-white opacity-0 peer-checked:opacity-100">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-3.5 w-3.5"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </span>
-                    </div>
-                    <span className="ml-2 text-[15px] text-[#1a3a5a]">
-                      {dia}
-                    </span>
-
-                    <FieldError>{errorsRecurring.days?.message}</FieldError>
-                  </label>
-                ))}
+                      <span className="ml-2 text-[15px]">{week.name}</span>
+                    </label>
+                  ))}
+                </div>
+                <FieldError>
+                  {errorsRecurring.WeeksReservations?.message}
+                </FieldError>
+                <p className="text-[13px] text-gray-600">
+                  Seleccionado: {selectedWeek ? selectedWeek : "(sin semana)"}
+                </p>
               </div>
-            </div>
 
-            <div className="space-y-3 pt-2">
-              <label className="block text-[15px]">Aplicar en:</label>
-              <div className="flex flex-wrap gap-8">
-                {weeks.map((week) => (
-                  <label
-                    key={week.type}
-                    className="flex cursor-pointer items-center"
-                  >
-                    <input
-                      type="radio"
-                      value={week.type}
-                      {...registerRecurring("WeeksReservations")}
-                      className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-[15px]">{week.name}</span>
-                  </label>
-                ))}
+              <div className="lg:hidden">
+                <RecurringCalendarPreview
+                  startDate={startDateRecurring}
+                  endDate={endDateRecurring}
+                  selectedDay={selectedDay ?? diaSeleccionado}
+                  selectedWeek={selectedWeek}
+                />
               </div>
-              <FieldError>
-                {errorsRecurring.WeeksReservations?.message}
-              </FieldError>
-            </div>
 
-            <div className="flex flex-col items-stretch gap-4">
-              <FieldGroup>
-                <Field>
-                  {user?.role === RoleEnum.ADMIN && (
-                    <div className="border-rounded mt-2 border-2 border-gray-200 p-2">
-                      <div className="space-y-4 pt-4">
-                        <div className="space-y-3">
-                          <label className="block text-[15px] font-medium text-[#1a3a5a]">
-                            ¿A quién le harás la reserva?
-                          </label>
-                          <div className="flex flex-wrap gap-8">
-                            <label className="flex cursor-pointer items-center">
-                              <input
-                                type="radio"
-                                name="reserva-tipo"
-                                value="mi"
-                                checked={reservaPara === "mi"}
-                                onChange={(e) => setReservaPara(e.target.value)}
-                                className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                              />
-                              <span className="ml-2 text-[15px] text-gray-700">
-                                Para mí
-                              </span>
+              <div className="flex flex-col items-stretch gap-4">
+                <FieldGroup>
+                  <Field>
+                    {user?.role === RoleEnum.ADMIN && (
+                      <div className="border-rounded mt-2 border-2 border-gray-200 p-2">
+                        <div className="space-y-4 pt-4">
+                          <div className="space-y-3">
+                            <label className="block text-[15px] font-medium text-[#1a3a5a]">
+                              ¿A quién le harás la reserva?
                             </label>
+                            <div className="flex flex-wrap gap-8">
+                              <label className="flex cursor-pointer items-center">
+                                <input
+                                  type="radio"
+                                  name="reserva-tipo"
+                                  value="mi"
+                                  checked={reservaPara === "mi"}
+                                  onChange={(e) =>
+                                    setReservaPara(e.target.value)
+                                  }
+                                  className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="ml-2 text-[15px] text-gray-700">
+                                  Para mí
+                                </span>
+                              </label>
 
-                            <label className="flex cursor-pointer items-center">
-                              <input
-                                type="radio"
-                                name="reserva-tipo"
-                                value="alguien"
-                                checked={reservaPara === "alguien"}
-                                onChange={(e) => setReservaPara(e.target.value)}
-                                className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                              />
-                              <span className="ml-2 text-[15px] text-gray-700">
-                                Para alguien
-                              </span>
-                            </label>
+                              <label className="flex cursor-pointer items-center">
+                                <input
+                                  type="radio"
+                                  name="reserva-tipo"
+                                  value="alguien"
+                                  checked={reservaPara === "alguien"}
+                                  onChange={(e) =>
+                                    setReservaPara(e.target.value)
+                                  }
+                                  className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="ml-2 text-[15px] text-gray-700">
+                                  Para alguien
+                                </span>
+                              </label>
+                            </div>
                           </div>
-                        </div>
 
-                        {reservaPara === "alguien" && (
-                          <div className="animate-fadeIn space-y-2">
-                            <FieldLabel htmlFor="profesor-select">
-                              Selecciona al profesor
-                            </FieldLabel>
-                            <Field className="w-full">
-                              <select
-                                id="profesor-select"
-                                className="w-full rounded-md border border-gray-300 p-2 text-black"
-                                {...registerRecurring("whomYouReserved")}
-                              >
-                                <option value="">Selecciona un profesor</option>
-                                {users.map((user: any) => (
-                                  <option
-                                    key={user.id}
-                                    value={user.id}
-                                    className="text-black"
-                                  >
-                                    {user.username}
+                          {reservaPara === "alguien" && (
+                            <div className="animate-fadeIn space-y-2">
+                              <FieldLabel htmlFor="profesor-select">
+                                Selecciona al profesor
+                              </FieldLabel>
+                              <Field className="w-full">
+                                <select
+                                  id="profesor-select"
+                                  className="w-full rounded-md border border-gray-300 p-2 text-black"
+                                  {...registerRecurring("whomYouReserved")}
+                                >
+                                  <option value="">
+                                    Selecciona un profesor
                                   </option>
-                                ))}
-                              </select>
-                            </Field>
-                          </div>
-                        )}
+                                  {users.map((user: any) => (
+                                    <option
+                                      key={user.id}
+                                      value={user.id}
+                                      className="text-black"
+                                    >
+                                      {user.username}
+                                    </option>
+                                  ))}
+                                </select>
+                              </Field>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  <FieldLabel htmlFor="laboratorio-selection">
-                    Selecciona un laboratorio
-                  </FieldLabel>
-
-                  <select
-                    id="laboratorio-selection"
-                    {...registerRecurring("laboratorio")}
-                    className={`w-full rounded-md border p-2`}
-                  >
-                    <option value="">Selecciona</option>
-                    {availableLaboratory.map(
-                      (laboratory: any) =>
-                        laboratory.active === true && (
-                          <option key={laboratory.id} value={laboratory.id}>
-                            {laboratory.name}
-                          </option>
-                        ),
                     )}
-                  </select>
+                    <FieldLabel htmlFor="laboratorio-selection">
+                      Selecciona un laboratorio
+                    </FieldLabel>
 
-                  <FieldError>
-                    {errorsRecurring.laboratorio?.message}
-                  </FieldError>
-                </Field>
+                    <select
+                      id="laboratorio-selection"
+                      {...registerRecurring("laboratorio")}
+                      className={`w-full rounded-md border p-2`}
+                    >
+                      <option value="">Selecciona</option>
+                      {availableLaboratory.map(
+                        (laboratory: any) =>
+                          laboratory.active === true && (
+                            <option key={laboratory.id} value={laboratory.id}>
+                              {laboratory.name}
+                            </option>
+                          ),
+                      )}
+                    </select>
 
-                <Field>
-                  <FieldLabel htmlFor="tipo-evento">
-                    Selecciona el tipo de evento
-                  </FieldLabel>
-                  <select
-                    id="tipo-evento"
-                    {...registerRecurring("type_event")}
-                    className={`w-full rounded-md border bg-gray-200 p-2 text-gray-500`}
-                    disabled={true}
-                    defaultValue={TypeReservation.CLASE}
-                  >
-                    <option value="">Selecciona</option>
-                    {stateTypeEvent.map((state) => (
-                      <option key={state.id} value={state.id}>
-                        {state.name}
-                      </option>
-                    ))}
-                  </select>
+                    <FieldError>
+                      {errorsRecurring.laboratorio?.message}
+                    </FieldError>
+                  </Field>
 
-                  <FieldError>{errorsRecurring.type_event?.message}</FieldError>
-                </Field>
+                  <Field>
+                    <FieldLabel htmlFor="tipo-evento">
+                      Selecciona el tipo de evento
+                    </FieldLabel>
+                    <select
+                      id="tipo-evento"
+                      {...registerRecurring("type_event")}
+                      className={`w-full rounded-md border bg-gray-200 p-2 text-gray-500`}
+                      disabled={true}
+                      defaultValue={TypeReservation.CLASE}
+                    >
+                      <option value="">Selecciona</option>
+                      {stateTypeEvent.map((state) => (
+                        <option key={state.id} value={state.id}>
+                          {state.name}
+                        </option>
+                      ))}
+                    </select>
 
-                <Field>
-                  <FieldLabel htmlFor={`${formId}-start-time`}>
-                    Selecciona la hora a reservar
-                  </FieldLabel>
-                  <Input
-                    id={`${formId}-start-time`}
-                    list="horas-disponibles"
-                    type="time"
-                    {...registerRecurring("start_time")}
-                  />
-                  <FieldError>{errorsRecurring.start_time?.message}</FieldError>
-                  <datalist id="horas-disponibles">
-                    {filteredHours.map((hour) => (
-                      <option key={hour} value={hour}>
-                        {hour}
-                      </option>
-                    ))}
-                  </datalist>
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor={`${formId}-end-time`}>
-                    Selecciona la hora de finalizacion
-                  </FieldLabel>
-                  <Input
-                    id={`${formId}-end-time`}
-                    list="horas-disponibles"
-                    type="time"
-                    {...registerRecurring("end_time")}
-                  />
-                  <FieldError>{errorsRecurring.end_time?.message}</FieldError>
-                  <datalist id="horas-disponibles">
-                    {filteredHours.map((hour) => (
-                      <option key={hour} value={hour}>
-                        {hour}
-                      </option>
-                    ))}
-                  </datalist>
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="message">
-                    Escribe una descripcion del motivo de reserva
-                  </FieldLabel>
-                  <Textarea
-                    id="message"
-                    {...registerRecurring("description")}
-                    rows={4}
-                    placeholder="Escribe por que necesitas reservar este espacio"
-                    className={`${stepsView && "cursor-not-allowed bg-gray-100"}`}
-                    disabled={stepsView}
-                  />
-                  <FieldError>
-                    {errorsRecurring.description?.message}
-                  </FieldError>
-                </Field>
-              </FieldGroup>
-              <FieldError>{errorsRecurring.root?.message}</FieldError>
-              <Field
-                orientation="horizontal"
-                className="flex-col items-stretch justify-end md:flex-row md:items-center"
-              >
-                <Button asChild type="button" variant="secondary">
-                  <Link to="/reservas">Cancelar</Link>
-                </Button>
+                    <FieldError>
+                      {errorsRecurring.type_event?.message}
+                    </FieldError>
+                  </Field>
 
-                <Button disabled={load} type="submit">
-                  {load ? "cargando" : "confirmar"}
-                </Button>
-              </Field>
+                  <Field>
+                    <FieldLabel htmlFor={`${formId}-start-time`}>
+                      Selecciona la hora a reservar
+                    </FieldLabel>
+                    <Input
+                      id={`${formId}-start-time`}
+                      list="horas-disponibles"
+                      type="time"
+                      {...registerRecurring("start_time")}
+                    />
+                    <FieldError>
+                      {errorsRecurring.start_time?.message}
+                    </FieldError>
+                    <datalist id="horas-disponibles">
+                      {filteredHours.map((hour) => (
+                        <option key={hour} value={hour}>
+                          {hour}
+                        </option>
+                      ))}
+                    </datalist>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor={`${formId}-end-time`}>
+                      Selecciona la hora de finalizacion
+                    </FieldLabel>
+                    <Input
+                      id={`${formId}-end-time`}
+                      list="horas-disponibles"
+                      type="time"
+                      {...registerRecurring("end_time")}
+                    />
+                    <FieldError>{errorsRecurring.end_time?.message}</FieldError>
+                    <datalist id="horas-disponibles">
+                      {filteredHours.map((hour) => (
+                        <option key={hour} value={hour}>
+                          {hour}
+                        </option>
+                      ))}
+                    </datalist>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="message">
+                      Escribe una descripcion del motivo de reserva
+                    </FieldLabel>
+                    <Textarea
+                      id="message"
+                      {...registerRecurring("description")}
+                      rows={4}
+                      placeholder="Escribe por que necesitas reservar este espacio"
+                      className={`${stepsView && "cursor-not-allowed bg-gray-100"}`}
+                      disabled={stepsView}
+                    />
+                    <FieldError>
+                      {errorsRecurring.description?.message}
+                    </FieldError>
+                  </Field>
+                </FieldGroup>
+                <FieldError>{errorsRecurring.root?.message}</FieldError>
+                <Field
+                  orientation="horizontal"
+                  className="flex-col items-stretch justify-end md:flex-row md:items-center"
+                >
+                  <Button asChild type="button" variant="secondary">
+                    <Link to="/reservas">Cancelar</Link>
+                  </Button>
+
+                  <Button disabled={load} type="submit">
+                    {load ? "cargando" : "confirmar"}
+                  </Button>
+                </Field>
+              </div>
+            </div>
+
+            <div className="hidden lg:block">
+              <div className="lg:sticky lg:top-4">
+                <RecurringCalendarPreview
+                  startDate={startDateRecurring}
+                  endDate={endDateRecurring}
+                  selectedDay={selectedDay ?? diaSeleccionado}
+                  selectedWeek={selectedWeek}
+                  maxHeightClassName="max-h-[420px]"
+                />
+              </div>
             </div>
           </div>
         </form>
