@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import { Link } from "react-router";
+import { useDebounceValue } from "usehooks-ts";
 
 const PAGE_SIZE = 10;
 
@@ -58,7 +59,7 @@ function formatTime(start?: string, end?: string) {
 }
 
 export function ReservationsTable() {
-  const [search, setSearch] = useState("");
+  const [debouncedSearch, setSearch] = useDebounceValue("", 500);
   const [page, setPage] = useState(1);
   const [typeActivity, setTypeActivity] = useState<
     "CLASE" | "EVENTO" | "MANTENIMIENTO" | ""
@@ -70,10 +71,13 @@ export function ReservationsTable() {
   const queryClient = useQueryClient();
 
   const { data } = useSuspenseQuery({
-    queryKey: ["reservations", { search, typeActivity, statusFilter, page }],
+    queryKey: [
+      "reservations",
+      { search: debouncedSearch, typeActivity, statusFilter, page },
+    ],
     queryFn: () =>
       reservationsService.search({
-        search: search || undefined,
+        search: debouncedSearch || undefined,
         page,
         limit: PAGE_SIZE,
         type: typeActivity || undefined,
@@ -129,12 +133,16 @@ export function ReservationsTable() {
           </div>
           <Input
             placeholder="Buscar por profesor, laboratorio o solicitud..."
-            value={search}
+            className="pl-10"
             onChange={(e) => {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="pl-10"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setSearch.flush();
+              }
+            }}
           />
         </label>
 
@@ -352,7 +360,7 @@ export function ReservationsTable() {
                       <p className="text-sm font-medium text-[#616f89]">
                         No hay resultados para los filtros aplicados
                       </p>
-                      {(typeActivity || statusFilter || search) && (
+                      {(typeActivity || statusFilter || debouncedSearch) && (
                         <Button
                           variant="link"
                           className="text-xs text-blue-500"
@@ -360,6 +368,7 @@ export function ReservationsTable() {
                             setTypeActivity("");
                             setStatusFilter("");
                             setSearch("");
+                            setSearch.flush();
                           }}
                         >
                           Limpiar todos los filtros
