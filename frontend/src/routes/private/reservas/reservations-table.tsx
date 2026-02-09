@@ -28,7 +28,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { useDebounceValue } from "usehooks-ts";
 
@@ -51,13 +51,21 @@ function formatTime(start?: string, end?: string) {
 }
 
 export function ReservationsTable() {
-  const [debouncedSearch, setSearch] = useDebounceValue("", 500);
   const [page, setPage] = useState(1);
-  const [typeActivity, setTypeActivity] = useState<
-    "CLASE" | "EVENTO" | "MANTENIMIENTO" | ""
-  >("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [laboratoryId, setLaboratoryId] = useState<number | null>(null);
+  const [filters, setFilters] = useDebounceValue<{
+    search: string;
+    typeActivity: "CLASE" | "EVENTO" | "MANTENIMIENTO" | "";
+    statusFilter: string;
+    laboratoryId: number | null;
+  }>(
+    {
+      search: "",
+      typeActivity: "",
+      statusFilter: "",
+      laboratoryId: null,
+    },
+    500,
+  );
 
   const { user } = useUser();
   const isAdmin = user?.role === RoleEnum.ADMIN;
@@ -67,21 +75,21 @@ export function ReservationsTable() {
     queryKey: [
       "reservations",
       {
-        search: debouncedSearch,
-        typeActivity,
-        statusFilter,
-        laboratoryId,
+        search: filters.search,
+        typeActivity: filters.typeActivity,
+        statusFilter: filters.statusFilter,
+        laboratoryId: filters.laboratoryId,
         page,
       },
     ],
     queryFn: () =>
       reservationsService.search({
-        search: debouncedSearch || undefined,
+        search: filters.search || undefined,
         page,
         limit: PAGE_SIZE,
-        type: typeActivity || undefined,
-        state: statusFilter || undefined,
-        laboratoryId: laboratoryId ?? undefined,
+        type: filters.typeActivity || undefined,
+        state: filters.statusFilter || undefined,
+        laboratoryId: filters.laboratoryId ?? undefined,
       }),
   });
 
@@ -91,6 +99,7 @@ export function ReservationsTable() {
     mutationFn: (id: number) => reservationsService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      setPage(1);
     },
   });
 
@@ -98,12 +107,6 @@ export function ReservationsTable() {
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
   const pageData = data?.data ?? [];
-
-  React.useEffect(() => {
-    if (total > 0 && (page - 1) * PAGE_SIZE >= total) {
-      setPage(1);
-    }
-  }, [total, page]);
 
   const updateReservationStatus = (
     id: number,
@@ -127,32 +130,37 @@ export function ReservationsTable() {
   return (
     <div className="space-y-4">
       <ReservationsFilters
-        typeActivity={typeActivity}
-        statusFilter={statusFilter}
-        laboratoryId={laboratoryId}
+        typeActivity={filters.typeActivity}
+        statusFilter={filters.statusFilter}
+        laboratoryId={filters.laboratoryId}
         onSearchChange={(value) => {
-          setSearch(value);
+          setFilters({ ...filters, search: value });
           setPage(1);
         }}
-        onSearchSubmit={() => setSearch.flush()}
+        onSearchSubmit={() => setFilters.flush()}
         onTypeChange={(value) => {
-          setTypeActivity(value);
+          setFilters({ ...filters, typeActivity: value });
+          setFilters.flush();
           setPage(1);
         }}
         onStatusChange={(value) => {
-          setStatusFilter(value);
+          setFilters({ ...filters, statusFilter: value });
+          setFilters.flush();
           setPage(1);
         }}
         onLaboratoryChange={(value) => {
-          setLaboratoryId(value);
+          setFilters({ ...filters, laboratoryId: value });
+          setFilters.flush();
           setPage(1);
         }}
         onClearFilters={() => {
-          setTypeActivity("");
-          setStatusFilter("");
-          setLaboratoryId(null);
-          setSearch("");
-          setSearch.flush();
+          setFilters({
+            search: "",
+            typeActivity: "",
+            statusFilter: "",
+            laboratoryId: null,
+          });
+          setFilters.flush();
           setPage(1);
         }}
       />
@@ -314,19 +322,21 @@ export function ReservationsTable() {
                       <p className="text-sm font-medium text-[#616f89]">
                         No hay resultados para los filtros aplicados
                       </p>
-                      {(typeActivity ||
-                        statusFilter ||
-                        laboratoryId ||
-                        debouncedSearch) && (
+                      {(filters.typeActivity ||
+                        filters.statusFilter ||
+                        filters.laboratoryId ||
+                        filters.search) && (
                         <Button
                           variant="link"
                           className="text-xs text-blue-500"
                           onClick={() => {
-                            setTypeActivity("");
-                            setStatusFilter("");
-                            setLaboratoryId(null);
-                            setSearch("");
-                            setSearch.flush();
+                            setFilters({
+                              search: "",
+                              typeActivity: "",
+                              statusFilter: "",
+                              laboratoryId: null,
+                            });
+                            setFilters.flush();
                           }}
                         >
                           Limpiar todos los filtros
