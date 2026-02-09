@@ -13,6 +13,7 @@ export const reservationsService = {
     limit?: number;
     state?: string;
     type?: ReserveTypeName;
+    laboratoryId?: number;
   }) => {
     const searchParams = new URLSearchParams();
     if (params?.search) searchParams.set("search", params.search);
@@ -22,6 +23,8 @@ export const reservationsService = {
       searchParams.set("filter.state.name", `$eq:${params.state}`);
     if (params?.type)
       searchParams.set("filter.type.name", `$eq:${params.type}`);
+    if (params?.laboratoryId)
+      searchParams.set("filter.laboratory.id", `$eq:${params.laboratoryId}`);
 
     return apiClient
       .get("reservations", { searchParams })

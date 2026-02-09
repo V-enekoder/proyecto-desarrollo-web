@@ -17,6 +17,7 @@ import {
 import { useUpdateReservationState } from "@/hooks/use-update-reservation-state";
 import { useUser } from "@/lib/auth";
 import { getInitials } from "@/lib/utils";
+import { laboratoriesService } from "@/services/laboratories";
 import { reservationsService } from "@/services/reservations";
 import {
   useMutation,
@@ -36,7 +37,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { startTransition, useState } from "react";
 import { Link } from "react-router";
 import { useDebounceValue } from "usehooks-ts";
 
@@ -65,6 +66,7 @@ export function ReservationsTable() {
     "CLASE" | "EVENTO" | "MANTENIMIENTO" | ""
   >("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [laboratoryId, setLaboratoryId] = useState<number | null>(null);
 
   const { user } = useUser();
   const isAdmin = user?.role === RoleEnum.ADMIN;
@@ -73,7 +75,13 @@ export function ReservationsTable() {
   const { data } = useSuspenseQuery({
     queryKey: [
       "reservations",
-      { search: debouncedSearch, typeActivity, statusFilter, page },
+      {
+        search: debouncedSearch,
+        typeActivity,
+        statusFilter,
+        laboratoryId,
+        page,
+      },
     ],
     queryFn: () =>
       reservationsService.search({
@@ -82,8 +90,19 @@ export function ReservationsTable() {
         limit: PAGE_SIZE,
         type: typeActivity || undefined,
         state: statusFilter || undefined,
+        laboratoryId: laboratoryId ?? undefined,
       }),
   });
+
+  const { data: laboratories } = useSuspenseQuery({
+    queryKey: ["laboratories"],
+    queryFn: () => laboratoriesService.getAll(),
+  });
+
+  const selectedLaboratoryName =
+    laboratoryId != null
+      ? laboratories.find((lab) => lab.id === laboratoryId)?.name
+      : null;
 
   const { mutate: changeState } = useUpdateReservationState();
 
@@ -168,6 +187,44 @@ export function ReservationsTable() {
                   }}
                 >
                   {type || "Todas"}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Menú Laboratorio */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="secondary"
+                className="bg-gray-100 text-gray-600 shadow-xs hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
+              >
+                Laboratorio: {selectedLaboratoryName || "Todos"}
+                <ChevronRight className="size-4 rotate-90 text-gray-400" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem
+                onClick={() => {
+                  startTransition(() => {
+                    setLaboratoryId(null);
+                    setPage(1);
+                  });
+                }}
+              >
+                Todos
+              </DropdownMenuItem>
+              {laboratories.map((lab) => (
+                <DropdownMenuItem
+                  key={lab.id}
+                  onClick={() => {
+                    startTransition(() => {
+                      setLaboratoryId(lab.id);
+                      setPage(1);
+                    });
+                  }}
+                >
+                  {lab.name}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -360,13 +417,17 @@ export function ReservationsTable() {
                       <p className="text-sm font-medium text-[#616f89]">
                         No hay resultados para los filtros aplicados
                       </p>
-                      {(typeActivity || statusFilter || debouncedSearch) && (
+                      {(typeActivity ||
+                        statusFilter ||
+                        laboratoryId ||
+                        debouncedSearch) && (
                         <Button
                           variant="link"
                           className="text-xs text-blue-500"
                           onClick={() => {
                             setTypeActivity("");
                             setStatusFilter("");
+                            setLaboratoryId(null);
                             setSearch("");
                             setSearch.flush();
                           }}
