@@ -18,7 +18,7 @@ import {
   PaginateQuery,
 } from "nestjs-paginate";
 import * as pkgRRule from "rrule";
-import { DataSource, Repository } from "typeorm";
+import { DataSource, EntityManager, Repository } from "typeorm";
 import { StatsDto } from "./dto/stats.dto";
 import { Ocupation } from "./entities/ocupation.entity";
 import { Reservation } from "./entities/reservation.entity";
@@ -65,23 +65,15 @@ export class ReservationsService {
         });
         const savedReservation = await manager.save(reservation);
 
-        const dates = this.generateOcupationDates(
-          dto.startDate,
-          dto.endDate,
-          dto.rrule,
-        );
-
-        const ocupations = dates.map((date) => {
-          return manager.create(Ocupation, {
-            date: date,
-            startHour: dto.defaultStartTime,
-            endHour: dto.defaultEndTime,
-            reservation: savedReservation,
-            active: true,
-          });
+        await this.replaceOcupations({
+          manager,
+          reservation: savedReservation,
+          startDate: dto.startDate,
+          endDate: dto.endDate,
+          rrule: dto.rrule,
+          startHour: dto.defaultStartTime,
+          endHour: dto.defaultEndTime,
         });
-
-        await manager.save(Ocupation, ocupations);
 
         return savedReservation;
       });
@@ -95,6 +87,55 @@ export class ReservationsService {
       }
       throw new InternalServerErrorException(error.message);
     }
+  }
+
+  private async replaceOcupations({
+    manager,
+    reservation,
+    startDate,
+    endDate,
+    rrule,
+    startHour,
+    endHour,
+  }: {
+    manager: EntityManager;
+    reservation: Reservation;
+    startDate: string;
+    endDate?: string;
+    rrule?: string;
+    startHour: string;
+    endHour: string;
+  }) {
+    const dates = this.generateOcupationDates(startDate, endDate, rrule);
+
+    const ocupations = dates.map((date) => {
+      return manager.create(Ocupation, {
+        date,
+        startHour,
+        endHour,
+        reservation,
+        active: true,
+      });
+    });
+
+    await manager.save(Ocupation, ocupations);
+  }
+
+  private async updateOcupationHours(
+    manager: EntityManager,
+    reservationId: number,
+    startHour: string,
+    endHour: string,
+  ) {
+    await manager
+      .createQueryBuilder()
+      .update(Ocupation)
+      .set({
+        startHour,
+        endHour,
+      })
+      .where("reservation_id = :id", { id: reservationId })
+      .execute();
   }
 
   private generateOcupationDates(
@@ -167,21 +208,113 @@ export class ReservationsService {
   }
 
   async update(id: number, dto: UpdateReservationDto, user: Express.User) {
-    await this.findOne(id, user); // Check if exists and user has permission
+    const existingReservation = await this.reservationRepo.findOne({
+      where: { id },
+      relations: ["user"],
+    });
+
+    if (!existingReservation) {
+      throw new NotFoundException(`Reserva con ID ${id} no encontrada`);
+    }
+
+    if (
+      user.role !== RoleEnum.ADMIN &&
+      existingReservation.user?.id !== user.id
+    ) {
+      throw new ForbiddenException(
+        "No tienes permiso para actualizar esta reserva",
+      );
+    }
+
+    if (dto.userId && user.role !== RoleEnum.ADMIN) {
+      throw new ForbiddenException(
+        "No tienes permiso para reasignar esta reserva",
+      );
+    }
+
+    const stateId = (dto as { stateId?: number }).stateId;
+    if (stateId) {
+      throw new ForbiddenException(
+        "No puedes cambiar el estado desde la edición de la reserva",
+      );
+    }
 
     const reservation = await this.reservationRepo.preload({
       ...dto,
       id,
       laboratory: dto.laboratoryId ? { id: dto.laboratoryId } : undefined,
       type: dto.typeId ? { id: dto.typeId } : undefined,
-      state: dto.stateId ? { id: dto.stateId } : undefined,
+      user: dto.userId ? { id: dto.userId } : undefined,
     });
 
     if (!reservation) {
       throw new NotFoundException(`Reserva con ID ${id} no encontrada`);
     }
 
-    return await this.reservationRepo.save(reservation);
+    const shouldRebuildOcupations =
+      typeof dto.startDate !== "undefined" ||
+      typeof dto.endDate !== "undefined" ||
+      typeof dto.rrule !== "undefined";
+
+    const shouldUpdateHours =
+      typeof dto.defaultStartTime !== "undefined" ||
+      typeof dto.defaultEndTime !== "undefined";
+
+    const normalizeDate = (value?: string | Date | null) => {
+      if (!value) return undefined;
+      if (typeof value === "string") return value;
+      return value.toISOString().split("T")[0];
+    };
+
+    const startDate = normalizeDate(
+      dto.startDate ?? existingReservation.startDate,
+    );
+    const endDate = normalizeDate(dto.endDate ?? existingReservation.endDate);
+    const rrule = dto.rrule ?? existingReservation.rrule;
+
+    try {
+      return await this.dataSource.transaction(async (manager) => {
+        const updatedReservation = await manager.save(Reservation, reservation);
+
+        if (shouldRebuildOcupations) {
+          await manager
+            .createQueryBuilder()
+            .delete()
+            .from(Ocupation)
+            .where("reservation_id = :id", { id })
+            .execute();
+
+          await this.replaceOcupations({
+            manager,
+            reservation: updatedReservation,
+            startDate: startDate ?? new Date().toISOString().split("T")[0],
+            endDate,
+            rrule: rrule ?? undefined,
+            startHour: updatedReservation.defaultStartTime,
+            endHour: updatedReservation.defaultEndTime,
+          });
+        } else if (shouldUpdateHours) {
+          await this.updateOcupationHours(
+            manager,
+            id,
+            updatedReservation.defaultStartTime,
+            updatedReservation.defaultEndTime,
+          );
+        }
+
+        return updatedReservation;
+      });
+    } catch (error) {
+      console.error("Detalle del error al actualizar reserva:", error);
+
+      if (error.code === "23505") {
+        throw new ConflictException(
+          "El laboratorio ya está ocupado en una de las fechas seleccionadas.",
+        );
+      }
+
+      throw new InternalServerErrorException(error.message);
+    }
   }
 
   async updateState(id: number, stateId: number, user: Express.User) {

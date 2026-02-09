@@ -1,12 +1,12 @@
+import { OmitType, PartialType } from "@nestjs/mapped-types";
 import {
-  IsString,
   IsDateString,
-  IsOptional,
   IsInt,
-  Matches,
   IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
 } from "class-validator";
-import { PartialType } from "@nestjs/mapped-types";
 
 export class CreateReservationDto {
   @IsString()
@@ -42,4 +42,10 @@ export class CreateReservationDto {
   stateId: number;
 }
 
-export class UpdateReservationDto extends PartialType(CreateReservationDto) {}
+export class UpdateReservationDto extends PartialType(
+  OmitType(CreateReservationDto, ["stateId"]),
+) {
+  @IsString()
+  @IsOptional()
+  userId?: string;
+}

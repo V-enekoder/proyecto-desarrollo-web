@@ -40,7 +40,20 @@ export const reservationsService = {
     return apiClient.get("reservations/stats").json().then(StatsSchema.parse);
   },
 
-  update: async (id: number, payload: { stateId?: number }) => {
+  update: async (
+    id: number,
+    payload: {
+      name?: string;
+      startDate?: string;
+      endDate?: string;
+      rrule?: string | null;
+      defaultStartTime?: string;
+      defaultEndTime?: string;
+      laboratoryId?: number;
+      typeId?: number;
+      userId?: string;
+    },
+  ) => {
     return apiClient
       .patch(`reservations/${id}`, { json: payload })
       .json()
