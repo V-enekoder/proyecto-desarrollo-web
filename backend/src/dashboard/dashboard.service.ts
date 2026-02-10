@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import PDFDocument from "pdfkit";
 import { ReservationsService } from "../reservations/reservations.service.js";
 import { Readable } from "node:stream";
+import { applyDashboardReportTemplate } from "./dashboard-report-template.js";
 
 @Injectable()
 export class DashboardService {
@@ -12,30 +13,9 @@ export class DashboardService {
       { path: "", page: 1, limit: 1000 },
       user,
     );
-    const doc = new PDFDocument({ margin: 50 });
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
 
-    doc
-      .fontSize(20)
-      .text("Sistema de Reservas Laboratorio UNEG", { align: "center" });
-    doc.moveDown();
-    doc
-      .fontSize(14)
-      .text("Reporte de solicitudes de reserva", { align: "center" });
-    doc.moveDown(2);
-
-    doc.fontSize(10);
-
-    reservas.forEach((r, i) => {
-      const reserveName = r.name ?? "Solicitud sin título";
-      const stateName = r.state?.name ?? "—";
-      const labName = r.laboratory?.name ?? "—";
-      const typeName = r.type?.name ?? "—";
-      doc.text(`${i + 1}. ${reserveName}`, { continued: false });
-      doc.text(`   Fecha: ${r.startDate} | Estado: ${stateName}`);
-      doc.text(`   Tipo: ${typeName} | Laboratorio: ${labName}`);
-      doc.text(`   Profesor: ${r.user?.name ?? "—"}`);
-      doc.moveDown(0.5);
-    });
+    applyDashboardReportTemplate(doc, reservas);
 
     doc.end();
     return Readable.from(doc);

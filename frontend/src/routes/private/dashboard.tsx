@@ -1,3 +1,4 @@
+import { DashboardPdfModal } from "@/components/dashboard/pdf-modal";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -150,12 +151,15 @@ export default function DashboardPage(_: Route.ComponentProps) {
               Sistema de Reservas Laboratorio UNEG
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
-            <FileDown className="h-3 w-3" />
-            <span className="ml-2 text-xs font-medium tracking-wide uppercase">
-              PDF
-            </span>
-          </Button>
+          <div className="flex gap-2">
+            <DashboardPdfModal />
+            <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
+              <FileDown className="h-3 w-3" />
+              <span className="ml-2 text-xs font-medium tracking-wide uppercase">
+                PDF
+              </span>
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
