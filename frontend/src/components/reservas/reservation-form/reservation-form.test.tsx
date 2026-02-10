@@ -70,7 +70,7 @@ describe("Componente ReservationForm", () => {
       path: "/reservar",
       Component: () => (
         <QueryClientProvider client={createTestQueryClient()}>
-          <ReservationForm {...defaultProps} />
+          <ReservationForm {...(defaultProps as any)} />
         </QueryClientProvider>
       ),
     },
