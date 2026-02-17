@@ -29,7 +29,10 @@ export const apiClient = ky.create({
         if (state.retryCount > 1) {
           console.warn("Max retries reached. Redirecting to login.");
         } else {
-          token = await refreshSession().then((res) => res?.accessToken);
+          token = await refreshSession().then((res) => res?.accessToken).catch((err) => {
+            console.error("Failed to refresh session:", err);
+            return null;
+          });
         }
 
         if (!token) {
