@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: "Sistema Laboratorio UNEG"
-  text: "Sistema de Gestión de las Reservas de los laboratorios de la UNEG"
+  text: "Gestión de Reservas de Laboratorios"
   tagline: "Documentación técnica y funcional del proyecto"
   actions:
     - theme: brand
