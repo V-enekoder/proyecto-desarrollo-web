@@ -56,9 +56,17 @@ export class ReservationsService {
   async create(dto: CreateReservationDto, user: Express.User) {
     try {
       await this.dataSource.transaction(async (manager) => {
+        const userId = dto.userId || user.id;
+
+        if (dto.userId != user.id && user.role !== RoleEnum.ADMIN) {
+          throw new ForbiddenException(
+            "No tienes permiso para asignar esta reserva a otro usuario",
+          );
+        }
+
         const reservation = manager.create(Reservation, {
           ...dto,
-          user: { id: user.id },
+          user: { id: userId },
           laboratory: { id: dto.laboratoryId },
           type: { id: dto.typeId },
           state: { id: dto.stateId },

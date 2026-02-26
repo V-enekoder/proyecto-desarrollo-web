@@ -23,23 +23,27 @@ export class CreateReservationDto {
   @IsString()
   @IsOptional()
   rrule?: string;
-
+  
   @IsString()
   @Matches(/^([01]\d|2[0-3]):?([0-5]\d):?([0-5]\d)$/)
   defaultStartTime: string;
-
+  
   @IsString()
   @Matches(/^([01]\d|2[0-3]):?([0-5]\d):?([0-5]\d)$/)
   defaultEndTime: string;
-
+  
   @IsInt()
   laboratoryId: number;
-
+  
   @IsInt()
   typeId: number;
-
+  
   @IsInt()
   stateId: number;
+
+  @IsString()
+  @IsOptional()
+  userId?: string;
 }
 
 export class UpdateReservationDto extends PartialType(
