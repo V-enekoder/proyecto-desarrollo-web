@@ -17,6 +17,7 @@ export default defineConfig({
     nav: [
       { text: "Inicio", link: "/" },
       { text: "Frontend", link: "/frontend/" },
+      { text: "Backend", link: "/backend/" },
     ],
 
     sidebar: {
@@ -30,6 +31,19 @@ export default defineConfig({
               link: "/frontend/decisiones-tecnicas",
             },
             { text: "Despliegue", link: "/frontend/despliegue" },
+          ],
+        },
+        {
+          text: "Backend",
+          items: [
+            { text: "Inicio", link: "/backend/" },
+            { text: "Architectura", link: "/backend/arquitectura" },
+            {
+              text: "Decisiones técnicas",
+              link: "/backend/decisiones-tecnicas",
+            },
+            { text: "Despliegue", link: "/backend/despliegue" },
+            { text: "API Reference", link: "/backend/api" },
           ],
         },
       ],
