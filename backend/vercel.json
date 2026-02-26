@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nestjs",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "buildCommand": "pnpm build && pnpm migration:run"
 }
