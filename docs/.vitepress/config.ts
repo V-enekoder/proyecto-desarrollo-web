@@ -1,7 +1,7 @@
 import { defineConfig } from "vitepress";
 
-const githubUrl = process.env.VERCEL
-  ? `https://github.com/${process.env.VERCEL_GIT_REPO_OWNER}/${process.env.VERCEL_GIT_REPO_SLUG}`
+const githubUrl = process.env.GITHUB_REPOSITORY
+  ? `https://github.com/${process.env.GITHUB_REPOSITORY}`
   : "#";
 
 const vitepressBase = process.env.VITEPRESS_BASE ?? "/";
