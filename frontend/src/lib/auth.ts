@@ -9,7 +9,7 @@ import ky from "ky";
 import { persist } from "zustand/middleware";
 import { useStore } from "zustand/react";
 import { createStore } from "zustand/vanilla";
-import { apiClient } from "./api";
+import { API_PREFIX, apiClient } from "./api";
 
 interface AuthState {
   refreshPromise: Promise<AuthResponse | null> | null;
@@ -131,7 +131,8 @@ export async function refreshSession(): Promise<AuthResponse | null> {
   });
   authStore.setState({ refreshPromise });
 
-  ky("/api/auth/refresh", {
+  ky("auth/refresh", {
+    prefixUrl: API_PREFIX,
     method: "POST",
     credentials: "include",
     throwHttpErrors: false,
